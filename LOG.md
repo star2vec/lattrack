@@ -181,3 +181,21 @@ of 5-7, about one serialization-noise median. No leader changes: crossing at the
 vendor format without touching the cue, and the model notices them a little; it does not change
 its mind on them. Any stronger version (a dead-end chain of several nodes toward the decoy, a
 closer label, or retraining on such graphs) is a design choice for the user.
+
+Huginn-0125 on this Mac (`src/lattrack/huginn_lens.py`, MPS, bf16, K=32): download 15.6 GB in
+~80 min at ~3 MB/s; model load 30 s; both tripwires exact (two runs under one init seed identical;
+per-loop lens at step 32 equals the model's own forward, max abs diff 0.0). Speed 28 s per
+32-step trajectory on a 123-token prompt (`results/huginn/timing/lens_summary.json`), so 50
+questions × 4 conditions ≈ 95 min. Readout: ARC-Challenge four-option questions through the chat
+template, option logit = logsumexp over the "A" and " A" spellings (the no-space spelling
+carries ~8 more logits). On the 5 timing questions the four letter logits end within ~1.3 of each
+other and option A leads at step 1 in every question (a position prior); accuracy 1/5. Checking
+whether the letter is the model's natural next token before the full run.
+Readout-position check (`results/huginn/timing/`, 3 questions, K=32): under the plain chat prompt
+the model's next token is "The" (0.42-0.59 mass) and greedy decoding writes "The correct answer
+is X."; the four letters carry 0.01-0.10 each at that position, so the timing pass read a
+position where the model was not answering (its near-level margins and 1/5 accuracy are that,
+not a finding). Fix: prefill the assistant turn with the model's own phrase "The correct answer
+is" (`--prompt-style chat_prefill`); every row now records the vocab mass on the letter tokens
+and whether a letter is the argmax, per step, so the readout position is verified in the data.
+Full run launched: 50 ARC-Challenge questions × {base, init_1, init_2, perm}, K=32, MPS.
