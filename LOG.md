@@ -100,3 +100,84 @@ positive control in this run.
 
 Open (user): drop this substrate, or keep it as the tooling and negative control; whether l_{K-1}
 is part of any trajectory; which model and task next (options in the 2026-09-08 report).
+
+## 2026-09-08 (later) — decisions after the deciding run; trajectory fixed; next checks
+
+Decisions (user): keep the 2-layer model and its code as the working setup and the comparison
+model. Exclude the never-recycled last latent (l_{K-1}) from every trajectory: nothing recycles
+its hidden state, the paper's readout stops one position earlier, and it behaved unlike the
+recycled positions (target leading there in 71-78% of graphs against 94-96% on either side),
+which manufactured the zigzag in the full view. lens.py schema v2; rows regenerated (deterministic).
+Next: (a) note on the arbitrary-pair finding, numbers only; (b) check whether Cui & Ye released
+per-loop outputs and, if so, run the same checks on their numbers; (c) whether the generator can
+make mind-changing graphs inside the vendor format without training; (d) Huginn on this Mac,
+50 questions, lens at every loop, distractor-pair check, speed and rate first. No sharpening or
+patching until (d) returns. No rental.
+
+Cui & Ye 2602.08100 (checked 2026-09-08; v1 only, 2026-02-08, independent authors): no code, no
+data, no per-step outputs released; benchmark is a self-built, unnamed, unreleased 260-item
+four-choice set (variants base / easy / no-correct-answer). Belief per step = softmax over the
+full vocabulary of the coda applied to the recurrent state, K=30 steps; token position and any
+renormalisation over the four options not stated. Backtracking event (verbatim): "the argmax
+answer is a for at least 3 consecutive steps, later becomes b≠a for at least 3 consecutive steps,
+and the final answer is b." Exploration ends when KL(p_{i+1}‖p_i) ≤ 0.01 for 3 consecutive steps.
+Margins, per-step probability tables, seeds: not reported; 25 answer-order permutations per item
+with bootstrap CIs are the only stability control. Headline numbers as stated: 32% of base items
+backtrack; backtracking items 34% more accurate; base explores 54% longer than easy; the abandoned
+answer is the most similar distractor in 72% of events; 52% backtrack to the correct answer.
+So the "run it on their numbers" branch of item 3 is closed: nothing to run on.
+
+Huginn-0125 (model card + remote code, checked 2026-09-08): weights 15.65 GB in float32 on disk
+(4 shards), ~7.8 GB in bf16; Apache-2.0; `num_steps` is a forward argument; the forward returns
+only the final latent state, the maintainer declined per-step outputs (issue #24), so the per-loop
+lens goes through the code's own `embed_inputs` → `iterate_one_step` → `predict_from_latents`
+(ln_f → coda → ln_f → lm_head), which is what wenquanlu/huginn-latent-cot did by editing the
+model file. "Coda lens" is Lu et al. 2507.02199's term, not Geiping et al.'s. No reports of
+Apple-silicon runs found. Download started 2026-09-08 into the HF cache.
+
+Rows regenerated under the v2 trajectory (root, l0..l_{K-2}, A); the v1 numbers above stand as
+the record of why. v2 headline (files `results/{seed0,seed1,random}/lens_summary_all.json`,
+`results/lens_compare_all.json`; n=419, base serialization seed 0, 3 edge-only redraws):
+
+| transition | seed0: real vs any / matched | seed1: real vs any / matched | random: real vs any / matched |
+|---|---|---|---|
+| last (l_{K-2}>A) | 0.033 vs 0.232 / 0.205 | 0.012 vs 0.160 / 0.174 | 0.332 vs 0.277 / 0.287 |
+| last-1 | 0.320 vs 0.317 / 0.283 | 0.368 vs 0.365 / 0.386 | 0.074 vs 0.055 / 0.051 |
+| last-2 | 0.325 vs 0.411 / 0.324 | 0.382 vs 0.394 / 0.386 | 0.105 vs 0.053 / 0.027 |
+| last-3 (K=4) | 0.290 vs 0.396 / 0.227 | 0.364 vs 0.419 / 0.261 | 0.129 vs 0.083 / 0.101 |
+
+Note on the arbitrary-pair check (numbers only). Counted without a null, this model "backtracks":
+a target-decoy leader change occurs in 57.9% of K=3 and 73.7% of K=4 graphs (seed0), 68.8% and
+82.0% (seed1); 2+ changes in one trajectory in 14.6% / 16.5%. Against the null, the same lens
+gives an arbitrary non-candidate pair a crossing rate at every transition equal to or above the
+real pair's (table above), 2+ changes in 34.1% / 28.2% of graphs (matched pair 17.4% / 22.9%),
+and at the final transition the real pair crosses in 3.3% / 1.2% against 23.2% / 16.0% for
+arbitrary pairs. The real pair's changes run one way, 129 of 134 and 151 of 154 at last-1 being
+the target taking the lead. Same files.
+
+Mind-changing graphs without training (`src/lattrack/mindchange.py`; files
+`results/{seed0,seed1}/mindchange_all.json` and `_rows_all.jsonl`). Format facts used: labels are
+a topological numbering (100% of 444,765 concept→concept training edges go low→high), names 0/1
+are the root and the unreachable source, so a "decoy that looks reachable" can only be made
+through the label cue. Construction: add one edge from the depth-(K-2) node on the target's
+path to an unreachable node u with no path to the decoy; `near` picks u just below the decoy's
+label (median distance 2), `far` picks u just above it (median 2); same slot, same depth, target
+depth and decoy unreachability preserved. Availability on the 419 test graphs: near 303, far 210,
+both 140. Paired on the 140 (base serialization, one forward each):
+
+| | seed0 | seed1 |
+|---|---|---|
+| accuracy base / near / far | 0.964 / 0.993 / 0.993 | 0.957 / 0.950 / 0.979 |
+| answer is the decoy, near / far | 0.007 / 0.007 | 0.036 / 0.021 |
+| decoy logit at l_{K-2}, near−far | +0.29 [0.20, 0.38] | +0.32 [0.23, 0.42] |
+| gap at l_{K-2}, near−far | −0.28 [−0.43, −0.13] | −0.40 [−0.58, −0.22] |
+| gap at [A], near−far | −0.42 [−0.59, −0.26] | −0.48 [−0.71, −0.29] |
+| mean gap at l_{K-2}, base | 5.5 | 6.6 |
+
+Reading: the label cue produces a real, consistent lean toward the decoy (the interval excludes
+zero on both seeds, at the depth-K readout and at the answer), of about 0.3 logits against a gap
+of 5-7, about one serialization-noise median. No leader changes: crossing at the last transition
+0-1.4% in every condition, flip rates unchanged. So the generator can make such graphs inside the
+vendor format without touching the cue, and the model notices them a little; it does not change
+its mind on them. Any stronger version (a dead-end chain of several nodes toward the decoy, a
+closer label, or retraining on such graphs) is a design choice for the user.

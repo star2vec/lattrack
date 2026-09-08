@@ -6,9 +6,14 @@ logits are the tied-embedding lens of the thought recycled from it
 (logits[latent_j] == wte @ t_{j+1}, checked on the first graph); at the root they are
 the lens of t_0; at [A] they are the answer readout.
 
-Readout positions, in order:  root, l0 .. l{K-1}, A       (K+2 positions)
+Readout positions, in order:  root, l0 .. l{K-2}, A       (K+1 positions)
+The last latent position l{K-1} is not in the trajectory: nothing recycles its
+hidden state, the paper's readout stops at t_{K-1} (= position l{K-2}), and it
+behaved unlike the recycled positions in the 2026-09-08 run (target leading there
+in 71-78% of graphs against 94-96% on either side). Its readout is kept per row
+under `unrecycled` for the record (decision, LOG 2026-09-08).
 Transitions are named by their endpoints ("root>l0", "l2>A") and also by their
-offset from the end ("last" = l{K-1}>A, "last-1", ...), because the answer arrives
+offset from the end ("last" = l{K-2}>A, "last-1", ...), because the answer arrives
 at the last transition whatever K is.
 
 One row per (graph, prompt variant) holds the target-decoy logit gap at every
@@ -56,7 +61,7 @@ from prompts import N_NODE_TOKENS, Prompt, covariates, pin_seed, vendor_draws
 from sets import PILOT, TEST_OFFSET, load_test, require_checkpoint, results_dir, write_json
 from stats import bootstrap
 
-SCHEMA = "lens-v1"
+SCHEMA = "lens-v2"          # v2: trajectory excludes the never-recycled last latent
 NULL_SEED_TAG = 777        # seed namespace for the null-pair draw, apart from serialization seeds
 RANDOM_INIT_SEED = 0       # untrained-init control: vendor set_seed before building the model
 ROOT_TOL, LATENT_TOL = 1e-4, 1e-6   # self-consistency tripwire (observed 5.7e-6 and 0.0)
@@ -80,7 +85,7 @@ def run_ids_all(runner, ids):
 
 
 def position_names(K):
-    return ["root"] + [f"l{i}" for i in range(K)] + ["A"]
+    return ["root"] + [f"l{i}" for i in range(K - 1)] + ["A"]
 
 
 def transition_names(K):
@@ -173,8 +178,9 @@ def pair_block(lg, positions, pr, pair):
 def make_row(runner, gi, variant, pr):
     lg = run_ids_all(runner, pr.ids(runner.tok))
     L = pr.layout()
-    positions = [L["root"]] + L["latents"] + [L["a"]]
+    positions = [L["root"]] + L["latents"][:-1] + [L["a"]]
     per = readout(lg, pr, positions)
+    unrecycled = readout(lg, pr, [L["latents"][-1]])[0]
     gaps = [r["gap"] for r in per]
     leaders, flips = flips_of(gaps)
     any_pair, matched = null_pairs(pr, gi)
@@ -186,6 +192,7 @@ def make_row(runner, gi, variant, pr):
         "correct": per[-1]["argmax_vocab"] == pr.target,
         "gaps": gaps, "leaders": leaders, "flips": flips, "n_ties": leaders.count("="),
         "per_position": per,
+        "unrecycled": unrecycled,
         "null_any": pair_block(lg, positions, pr, any_pair),
         "null_matched": pair_block(lg, positions, pr, matched),
         "cov": covariates(pr),
@@ -240,22 +247,12 @@ def crossing_rates(base_rows, get):
             {k: bootstrap(v, np.mean) for k, v in end.items()})
 
 
-def recycled_view(base, by, n_reserial):
-    """The trajectory without the never-recycled last latent position l_{K-1}: root,
-    l0..l_{K-2}, A. l_{K-1} holds a hidden state that is not a thought (nothing reads
-    it back; the paper's readout stops at t_{K-1} = position l_{K-2}), and it behaves
-    unlike the recycled positions (2026-09-08 run: target leads there in 71-78% of
-    graphs against 94-96% at l_{K-2} and at A), producing a zigzag that inflates the
-    last two transitions. Reported alongside the full view, not instead of it.
-
-    Also carries a CANDIDATE gate, not adopted: a flip is "above serialization
-    noise" when both margins exceed the 95th percentile of |gap change| under
-    edge-order redraws at their positions. Reported for the real pair and both nulls
-    so the gate can be judged before anyone uses it."""
-    def strip(g):
-        return g[:-2] + g[-1:]
-
-    # per-position serialization q95 in the full view, keyed by from-end name
+def candidate_gate(base, by, n_reserial):
+    """CANDIDATE gate, not adopted: a flip is "above serialization noise" when both of
+    its margins exceed the 95th percentile of |gap change| under edge-order redraws at
+    their positions. Reported for the real pair and both nulls so the gate can be
+    judged before anyone uses it. Also the reversal shape (2+ flips in one
+    trajectory) per pair."""
     noise = {}
     for r in base:
         n = len(r["positions"])
@@ -266,43 +263,26 @@ def recycled_view(base, by, n_reserial):
             for i in range(n):
                 noise.setdefault(from_end(i, n), []).append(abs(r["gaps"][i] - x["gaps"][i]))
     q95 = {k: float(np.percentile(v, 95)) for k, v in noise.items()}
-
-    def full_name(i, n_full):
-        # stripped index i -> from-end name of the same position in the full view
-        j = i if i < n_full - 2 else n_full - 1
-        return from_end(j, n_full)
-
-    out = {"positions": "root, l0..l_{K-2}, A", "gate_q95_by_position_full_view": q95,
-           "gate_sentence": "candidate, not adopted: both margins of a flip exceed the 95th "
-                            "percentile of |gap change| under edge-order redraws at their positions"}
-    for name, get in (("target_decoy", lambda r: r["gaps"]),
-                      ("null_any", lambda r: r["null_any"]["gaps"] if r["null_any"] else None),
-                      ("null_matched", lambda r: r["null_matched"]["gaps"] if r["null_matched"] else None)):
-        cross, dirs, two, gate_last, gate_non = {}, {}, [], [], []
+    out = {"q95_by_position": q95,
+           "sentence": "candidate, not adopted: both margins of a flip exceed the 95th percentile "
+                       "of |gap change| under edge-order redraws at their positions"}
+    for name, get in (("target_decoy", lambda r: r),
+                      ("null_any", lambda r: r["null_any"]),
+                      ("null_matched", lambda r: r["null_matched"])):
+        last, non, two = [], [], []
         for r in base:
-            g = get(r)
-            if g is None:
+            blk = get(r)
+            if blk is None:
                 continue
-            n_full = len(r["positions"])
-            g = strip(g)
-            n = len(g) - 1
-            _, fl = flips_of(g)
-            ts = {f["t"] for f in fl}
-            for i in range(n):
-                cross.setdefault(from_end(i, n), []).append(float(i in ts))
-            for f in fl:
-                dirs.setdefault(from_end(f["t"], n), {"T>D": 0, "D>T": 0})[f["dir"]] += 1
-                ok = (abs(f["gap_before"]) > q95[full_name(f["t"], n_full)]
-                      and abs(f["gap_after"]) > q95[full_name(f["t"] + 1, n_full)])
-                (gate_last if f["t"] == n - 1 else gate_non).append(float(ok))
-            two.append(float(len(fl) >= 2))
-        out[name] = {
-            "crossing_from_end": {k: bootstrap(v, np.mean) for k, v in cross.items()},
-            "direction_from_end": dirs,
-            "graphs_with_2plus_flips": bootstrap(two, np.mean),
-            "gate_survivors_last": bootstrap(gate_last, np.mean),
-            "gate_survivors_nonlast": bootstrap(gate_non, np.mean),
-        }
+            n = len(r["positions"])
+            for f in blk["flips"]:
+                ok = (abs(f["gap_before"]) > q95[from_end(f["t"], n)]
+                      and abs(f["gap_after"]) > q95[from_end(f["t"] + 1, n)])
+                (last if f["t"] == n - 2 else non).append(float(ok))
+            two.append(float(len(blk["flips"]) >= 2))
+        out[name] = {"survivors_last": bootstrap(last, np.mean),
+                     "survivors_nonlast": bootstrap(non, np.mean),
+                     "graphs_with_2plus_flips": bootstrap(two, np.mean)}
     return out
 
 
@@ -403,7 +383,7 @@ def summarize(rows, n_reserial):
         "margins_at_flips_abs": margins,
         "serialization_noise": noise,
         "cand_swap_cell": cand_swap,
-        "recycled_only_view": recycled_view(base, by, n_reserial),
+        "candidate_gate": candidate_gate(base, by, n_reserial),
     }
 
 
@@ -442,25 +422,15 @@ def headline_table(summary, label):
     c = summary["cand_swap_cell"]
     lines.append(f"  candidate-order swap (prompt change): flip set identical {fmt(c['flip_set_identical'])}; "
                  + "; ".join(f"|Δgap| {k} q50 {v['q50']:.2f}" for k, v in c["abs_gap_change_by_position"].items()))
-    v = summary.get("recycled_only_view")
-    if v:
-        keys = sorted(v["target_decoy"]["crossing_from_end"],
-                      key=lambda k: 0 if k == "last" else int(k.split("-")[1]))
-        lines += ["", f"recycled-only view ({v['positions']}); 'last' = l_{{K-2}}>A",
-                  "| transition | target-decoy crossing | null: any pair | null: matched pair | T>D / D>T |",
-                  "|---|---|---|---|---|"]
-        for k in keys:
-            d = v["target_decoy"]["direction_from_end"].get(k, {"T>D": 0, "D>T": 0})
-            lines.append(f"| {k} | {fmt(v['target_decoy']['crossing_from_end'].get(k))} | "
-                         f"{fmt(v['null_any']['crossing_from_end'].get(k))} | "
-                         f"{fmt(v['null_matched']['crossing_from_end'].get(k))} | {d['T>D']} / {d['D>T']} |")
+    g = summary.get("candidate_gate")
+    if g:
         for name in ("target_decoy", "null_any", "null_matched"):
-            x = v[name]
+            x = g[name]
             lines.append(f"  [{name}] graphs with 2+ flips (reversal shape) {fmt(x['graphs_with_2plus_flips'])}; "
-                         f"candidate gate survivors: last {fmt(x['gate_survivors_last'])}, "
-                         f"non-last {fmt(x['gate_survivors_nonlast'])}")
-        lines.append(f"  gate ({v['gate_sentence']}); q95 by position: "
-                     + ", ".join(f"{k} {q:.2f}" for k, q in v["gate_q95_by_position_full_view"].items()))
+                         f"candidate gate survivors: last {fmt(x['survivors_last'])}, "
+                         f"non-last {fmt(x['survivors_nonlast'])}")
+        lines.append(f"  gate ({g['sentence']}); q95 by position: "
+                     + ", ".join(f"{k} {q:.2f}" for k, q in g["q95_by_position"].items()))
     return "\n".join(lines)
 
 
@@ -562,8 +532,8 @@ def compare(args):
         if path.exists():
             s["conditions"] = json.load(open(path)).get("conditions")
             write_json(path, s)
-        out["runs"][name] = {"full_view": s["headline_crossing_rate_from_end"],
-                             "recycled_only_view": s["recycled_only_view"]}
+        out["runs"][name] = {"crossing": s["headline_crossing_rate_from_end"],
+                             "candidate_gate": s["candidate_gate"]}
         tables.append(headline_table(s, name))
     # cross-seed agreement between the first two trained runs given
     trained = [n for n in args.summarize if n != "random"]
