@@ -211,6 +211,7 @@ def summarize(rows, K):
     by = {(r["qid"], r["condition"]): r for r in rows}
     out = {"schema": SCHEMA, "n_questions": len(base), "K": K}
     d = lambda r: r["derived"]
+    q = lambda v: {f"q{p}": float(np.percentile(v, p)) for p in (10, 50, 90)} if v else None
     out["accuracy_base"] = bootstrap([float(d(r)["correct"]) for r in base], np.mean)
     if base and "letter_mass" in base[0]:
         out["readout_position_check"] = {
@@ -241,6 +242,31 @@ def summarize(rows, K):
     per_step_dis = [np.mean([np.mean([c[k] for c in d(r)["distractor_cross"]]) for r in base]) for k in range(K - 1)]
     out["crossing_per_step"] = {"real": [round(float(v), 4) for v in per_step_real],
                                 "distractor": [round(float(v), 4) for v in per_step_dis]}
+    # answering phase: transitions where a letter is the model's next token at both steps
+    # (early steps have ~0 vocab mass on the letters; changes there are between near-equal
+    # tiny logits, not answers)
+    if base and "argmax_is_letter" in base[0]:
+        def valid(r):
+            a = r["argmax_is_letter"]
+            return [a[k] and a[k + 1] for k in range(len(a) - 1)]
+        onset = [next((k + 1 for k, v in enumerate(r["argmax_is_letter"]) if v), None) for r in base]
+        out["letter_onset_step"] = {"median": float(np.median([o for o in onset if o])) if any(onset) else None,
+                                    "q90": float(np.percentile([o for o in onset if o], 90)) if any(onset) else None,
+                                    "never": int(sum(o is None for o in onset))}
+        real_v = [float(any(c for c, v in zip(d(r)["real_cross"], valid(r)) if v)) for r in base]
+        dis_v = [float(np.mean([any(c for c, v in zip(cc, valid(r)) if v) for cc in d(r)["distractor_cross"]]))
+                 for r in base]
+        chg_v = [float(sum(1 for c in d(r)["changes"] if valid(r)[c["t"]])) for r in base]
+        mb_v = [c["margin_before"] for r in base for c in d(r)["changes"] if valid(r)[c["t"]]]
+        ma_v = [c["margin_after"] for r in base for c in d(r)["changes"] if valid(r)[c["t"]]]
+        out["answering_phase"] = {
+            "definition": "transitions where a letter is the model's next token at both steps",
+            "real_pair_any_crossing": bootstrap(real_v, np.mean),
+            "distractor_pairs_any_crossing": bootstrap(dis_v, np.mean),
+            "mean_leader_changes": bootstrap(chg_v, np.mean),
+            "questions_with_leader_change": bootstrap([float(x > 0) for x in chg_v], np.mean),
+            "margin_at_changes": {"before": q(mb_v), "after": q(ma_v), "n": len(mb_v)},
+        }
     # where leader changes happen (last change step), and margins at changes
     last_change = [max(c["t"] for c in d(r)["changes"]) + 1 for r in base if d(r)["changes"]]
     out["last_leader_change_step"] = {"median": float(np.median(last_change)) if last_change else None,
@@ -248,7 +274,6 @@ def summarize(rows, K):
                                       "n": len(last_change)}
     mb = [c["margin_before"] for r in base for c in d(r)["changes"]]
     ma = [c["margin_after"] for r in base for c in d(r)["changes"]]
-    q = lambda v: {f"q{p}": float(np.percentile(v, p)) for p in (10, 50, 90)} if v else None
     out["margin_at_changes"] = {"before": q(mb), "after": q(ma), "n": len(mb)}
     # init-seed noise: |Δlogit gap| of the real pair per step, base vs init_1/init_2; leader agreement; change-set agreement
     diffs, agree, same_set = [], [], []
@@ -312,6 +337,18 @@ def table(s, cond):
              "", "| transitions | (correct, top distractor) crossing | distractor-distractor pairs crossing |", "|---|---|---|"]
     for k, v in s["crossing_by_step_bin"].items():
         lines.append(f"| {k} | {fmt(v['real_pair_any_crossing'])} | {fmt(v['distractor_pairs_any_crossing'])} |")
+    ap = s.get("answering_phase")
+    if ap:
+        o = s["letter_onset_step"]
+        lines.append(f"answering phase ({ap['definition']}); letter onset at step median {o['median']}, q90 {o['q90']}, "
+                     f"never {o['never']}: questions with a leader change {fmt(ap['questions_with_leader_change'])}; "
+                     f"mean changes {fmt(ap['mean_leader_changes'])}; (correct, top distractor) crossing "
+                     f"{fmt(ap['real_pair_any_crossing'])} vs distractor pairs {fmt(ap['distractor_pairs_any_crossing'])}")
+        mv = ap["margin_at_changes"]
+        if mv["before"]:
+            lines.append(f"  margins at answering-phase changes: before q10/50/90 {mv['before']['q10']:.2f}/"
+                         f"{mv['before']['q50']:.2f}/{mv['before']['q90']:.2f}, after {mv['after']['q10']:.2f}/"
+                         f"{mv['after']['q50']:.2f}/{mv['after']['q90']:.2f} (n={mv['n']})")
     m = s["margin_at_changes"]
     if m["before"]:
         lines.append(f"margins at leader changes (top-1 minus top-2 logit): before q10/50/90 "
@@ -341,9 +378,21 @@ def main():
     p.add_argument("--out", default=str(ROOT / "results" / "huginn"))
     p.add_argument("--fresh", action="store_true")
     p.add_argument("--prompt-style", default="chat", choices=("chat", "chat_prefill", "plain"))
+    p.add_argument("--summarize-only", action="store_true", help="recompute the summary from the rows; no model")
     args = p.parse_args()
     global PROMPT_STYLE
     PROMPT_STYLE = args.prompt_style
+    if args.summarize_only:
+        out_dir = Path(args.out)
+        rows = [json.loads(l) for l in open(out_dir / "lens_rows.jsonl") if l.strip()]
+        summary = summarize(rows, args.K)
+        prev = out_dir / "lens_summary.json"
+        summary["conditions"] = json.load(open(prev)).get("conditions") if prev.exists() else {"note": "rows only"}
+        write_json(prev, summary)
+        c = summary["conditions"]
+        print(table(summary, {"device": c.get("device", "?"), "dtype": c.get("dtype", "?"),
+                              "seconds_per_trajectory": c.get("seconds_per_trajectory") or float("nan")}))
+        return
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)

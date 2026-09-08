@@ -199,3 +199,46 @@ not a finding). Fix: prefill the assistant turn with the model's own phrase "The
 is" (`--prompt-style chat_prefill`); every row now records the vocab mass on the letter tokens
 and whether a letter is the argmax, per step, so the readout position is verified in the data.
 Full run launched: 50 ARC-Challenge questions × {base, init_1, init_2, perm}, K=32, MPS.
+
+## 2026-09-09 — Huginn per-loop lens: 50 questions
+
+Run (`src/lattrack/huginn_lens.py`; `results/huginn/lens_rows.jsonl`, `lens_summary.json`):
+Huginn-0125, bf16, MPS, K=32; 50 ARC-Challenge four-option test questions (seeded shuffle, seed
+20260908); prompt = chat template with the assistant turn prefilled "The correct answer is";
+option logit = logsumexp over the "A" / " A" spellings at the last position after every recurrent
+step, through the model's own `predict_from_latents`. Conditions per question: base (init seed
+0), init_1, init_2 (reseeds of the random initial state: the noise floor), perm (options rotated
+by one: the position cell). 200 trajectories, 37.8 s each on average (28 s with the machine idle,
+47 s with 11% memory free), about 2 h. Tripwires exact (determinism 0.0; lens at step 32 equals
+the model's forward, 0.0). Readout position verified in the data: letter tokens hold 0.88 of the
+vocabulary mass at the last step (0.001 at step 1) and a letter is the argmax at the last step in
+50/50; the letter becomes the argmax at step 5 (median and q90), so steps 1-4 are not answering.
+
+Numbers (base condition, n=50; bootstrap intervals in the file):
+- accuracy 0.38 (rotated 0.44); rotating the options changes correctness in 38% of questions.
+- 4-way leader changes: every question has some, mean 5.5 per question; last change at step
+  median 9.5, q90 26; exploration end (KL ≤ 0.01 for 3 steps) median step 11.
+- Cui & Ye events (their definition, verbatim in the 2026-09-08 entry): 33/50 = 0.66 [0.52, 0.78]
+  (they report 0.32 on their own set). Accuracy on those 0.39 vs 0.35 on the others (they report
+  +34%); intervals overlap.
+- Distractor-pair check, (correct, top distractor) crossing vs distractor-distractor pairs:
+  steps 1→4 0.56 vs 0.67; 4→8 0.72 vs 0.84; 8→16 0.48 vs 0.51; 16→32 0.10 vs 0.20; answering
+  phase only 0.78 vs 0.89. The real pair never crosses more than arbitrary distractor pairs.
+- Margins at leader changes (top-1 minus top-2 logit): answering phase q10/50/90
+  0.00/0.12/0.37 (n=176). Init-seed noise on the real pair's gap: |Δgap| q50 0.12, q90 0.37,
+  q95 0.69, q99 1.79. Leader agrees across reseeds at 0.90 of steps; the set of leader changes is
+  identical across reseeds in 4% of questions; the number of changes is the same after rotating
+  the options in 28%.
+- Noise-gated (candidate gate, not adopted: both margins > init-seed q95): 1 of 176
+  answering-phase changes survives (1 question of 50); 0 of 88 (correct, top distractor)
+  crossings; 0 of 347 distractor-pair crossings. All 33 Cui & Ye events have their switch after
+  the letter onset, and none of them survives the gate.
+
+Reading: the flip count reproduces and exceeds Cui & Ye's rate under their own definition, on a
+different question set; against the checks it is noise: margins at changes sit at the reseed
+noise median, changes are not reproducible across reseeds, the real pair crosses no more than
+arbitrary distractor pairs at any step, and the noise gate leaves 1 change in 50 questions. On
+this model the leader settles by about step 10 of 32 and what precedes it is init-seed
+wandering. Same shape as the 2-layer model. No thresholds adopted; the gate is reported as a
+candidate with its sentence. Not checked: their 260-item set (unreleased), K=30 vs 32, their
+25 permutations (2 reseeds + 1 rotation here), any renormalisation choice of theirs.
