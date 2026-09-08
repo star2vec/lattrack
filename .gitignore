@@ -1,0 +1,8 @@
+vendor/
+.venv/
+.claude/
+ckpts/
+__pycache__/
+*.pyc
+.DS_Store
+results/**/*.log
