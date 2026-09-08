@@ -50,3 +50,53 @@ Build:
 - Verified before writing the lens: at latent position j the logits equal wte @ t_{j+1}
   exactly; at the root position they equal wte @ t_0 to 6e-6. So the per-step logit lens is
   read off one forward, no fitting.
+
+Deciding run (`src/lattrack/lens.py`; files `results/{seed0,seed1,random}/lens_summary_all.json`,
+`lens_rows_all.jsonl`, `results/lens_compare_all.json`). Conditions: test split n=419 (K=3: 202,
+K=4: 217); base serialization seed 0 plus 3 edge-only redraws (seeds 1-3, candidate order held)
+and one candidate-order swap per graph; CPU; ~52 s per run. Tripwires passed (two forwards
+identical; latent lens vs wte@thought 0.0; root 5e-6). Accuracy at [A] under seed-0 serialization:
+seed0 396/419 (equals phoenix evaluation_ser0 exactly, so pinning and checkpoint identity hold),
+seed1 400/419, random init 2/419.
+
+Headline, recycled-only view (positions root, l0..l_{K-2}, A; "last" = l_{K-2}>A). Crossing rate
+per transition, target-decoy vs arbitrary non-candidate pair vs matched pair (reachable depth-K
+non-target vs unreachable non-candidate); 95% bootstrap intervals in the summary files:
+
+| transition | seed0: real vs any / matched | seed1: real vs any / matched |
+|---|---|---|
+| last | 0.033 vs 0.232 / 0.205 | 0.012 vs 0.160 / 0.174 |
+| last-1 | 0.320 vs 0.317 / 0.283 | 0.368 vs 0.365 / 0.386 |
+| last-2 | 0.325 vs 0.411 / 0.324 | 0.382 vs 0.394 / 0.386 |
+| last-3 (K=4 only) | 0.290 vs 0.396 / 0.227 | 0.364 vs 0.419 / 0.261 |
+
+Direction of the real flips at last-1: 5 T>D / 129 D>T (seed0), 3 / 151 (seed1): the target taking
+the lead as the wave reaches it, the answer arriving. Reversal shape (2+ flips in one trajectory):
+real 0.146 vs 0.341 / 0.174 (seed0); 0.165 vs 0.282 / 0.229 (seed1). Leader at l_{K-2} equals the
+leader at [A] in 96.7% / 98.8% of graphs.
+Full view (with l_{K-1}) is in the same files. l_{K-1} is not a thought: nothing recycles it, the
+paper's readout stops at l_{K-2}. The target leads there in only 78% / 71% of graphs (94.5% / 95.7%
+at l_{K-2}, 95% / 96% at [A]), which makes a zigzag (80 / 110 T>D into it, 78 / 109 D>T out of it)
+that the full-view "last" and "last-1" rows carry. Whether l_{K-1} belongs in any trajectory is a
+choice for the user; I report both.
+
+Noise (edge-order redraws): leader agrees across all 3 redraws at 92.2% / 91.4% of positions; a base
+flip is present in every redraw 72.9% / 76.0%; |Δgap| q95 by position 0.65-2.53 (seed0), 0.81-2.62
+(seed1). Candidate gate, NOT adopted: both margins of a flip exceed the per-position q95. Survivors
+among non-last flips: real 0.327 / 0.346, arbitrary pair 0.327 / 0.311, matched pair 0.244 / 0.152.
+The gate does not separate the real pair from arbitrary pairs. Candidate-order swap (a prompt
+change, not noise) changes the flip set in 34% / 42% of graphs. Cross-seed (seed0 vs seed1, same
+graph and prompt; a replication, not readout noise): flip set identical in 31.3% of graphs; |Δgap|
+q50 1.4-2.5, above the serialization noise. Random init: non-last crossings 5-13%, no gate
+survivors; last-transition crossing 33% ([A] is a different input token; no learning needed).
+
+Reading: on this model and task, target-decoy leader changes are not distinguishable from
+arbitrary-pair crossings at any transition, run one way (the target rising into the lead), show
+the reversal shape less often than null pairs, are seed-specific per graph, and the last recycled
+thought already holds the answer's leader. This is the brief's "almost nothing real" branch for
+this substrate. Pilot steps 3-4 have no real flip to act on here. No thresholds adopted. No
+positive control exists for mid-sequence flips on this substrate; the accuracy match is the only
+positive control in this run.
+
+Open (user): drop this substrate, or keep it as the tooling and negative control; whether l_{K-1}
+is part of any trajectory; which model and task next (options in the 2026-09-08 report).
