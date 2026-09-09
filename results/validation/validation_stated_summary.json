@@ -1,0 +1,58 @@
+{
+ "schema": "validate-readout-v1",
+ "subset": "stated",
+ "n_traces": 18,
+ "real_pair": {
+  "lean_before_switch": {
+   "point": 0.5261811869408183,
+   "lo": -4.794377359814025,
+   "hi": 5.663989301503966,
+   "n": 18
+  },
+  "lean_after_switch": {
+   "point": 3.177924490984748,
+   "lo": -1.6053200520145825,
+   "hi": 8.134676764473689,
+   "n": 18
+  },
+  "change": {
+   "point": 2.65174330404393,
+   "lo": 1.2130292285893371,
+   "hi": 4.064881049832959,
+   "n": 18
+  },
+  "fraction_moving_toward_the_later_answer": {
+   "point": 0.8333333333333334,
+   "lo": 0.6666666666666666,
+   "hi": 1.0,
+   "n": 18
+  }
+ },
+ "null_pair": {
+  "lean_before_switch": {
+   "point": -1.2078139031788062,
+   "lo": -2.558660521279244,
+   "hi": -0.019043718255328943,
+   "n": 18
+  },
+  "lean_after_switch": {
+   "point": -0.9642785601882764,
+   "lo": -2.473625507508446,
+   "hi": 0.28830512485864207,
+   "n": 18
+  },
+  "change": {
+   "point": 0.24353534299053,
+   "lo": -0.5524544771917655,
+   "hi": 1.1756800361538506,
+   "n": 18
+  },
+  "fraction_moving_toward_the_later_answer": {
+   "point": 0.5,
+   "lo": 0.2777777777777778,
+   "hi": 0.7222222222222222,
+   "n": 18
+  }
+ },
+ "reading": "lean = log P(later answer) - log P(earlier answer) under the forcing suffix; positive means the later answer is preferred"
+}

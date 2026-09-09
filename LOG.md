@@ -574,3 +574,47 @@ every 4 read positions (DynamicCache.crop does not release the allocator), token
 stride 64 -> 96. The workload is forward passes over 3-5k-token contexts with a live KV cache, on
 16 GB shared with a full desktop; it is not viable while the machine is loaded. Resumable by
 question index: rerunning the same command continues from row 5.
+
+### RESULT 6: the readout DOES follow a documented change of answer. RESULT 4's confound is reduced.
+
+`src/lattrack/validate_readout.py` over the 21 stated traces of the downloaded validation set;
+19 completed (2 skipped, no valid null candidates). Readout: lean = log P(later answer) −
+log P(earlier answer), each scored as its full token sequence after a forcing suffix that opens
+the answer box, teacher-forced. Null: two numbers appearing in the trace that were never
+committed as answers. fp16, MPS. Files `results/validation/validation_stated.jsonl`.
+
+Split by candidate quality, since the audit found the stated subset is not uniform: CLEAN = both
+answers plain numbers differing by more than 5% (n=11); WEAK = rounding/formatting changes such
+as 1.06 -> 1.061 (n=8).
+
+| subset | lean change first->last, real | same, null | crosses (real / null) | final lean favours later answer |
+|---|---|---|---|---|
+| clean, n=11 | **+6.05** | **+0.29** | 4 / 3 | 9/11 vs 7/11 |
+| weak, n=8 | −1.17 | −1.13 | 2 / 1 | 5/8 vs 2/8 |
+| all, n=19 | +4.47 | −0.14 | 6 / 4 | 14/19 vs 9/19 |
+
+**The headline is the movement, not the crossing count.** On clean cases the real pair moves
+toward the later answer by a median of +6.05 log-units while the null pair moves +0.29 — a
+twenty-fold difference on the same traces, same reads, same instrument. On weak cases (rounding
+changes) real and null are indistinguishable (−1.17 vs −1.13), which is the right behaviour: there
+is no real change of answer to track.
+
+**Why the crossing counts are weaker than the movement, and it is my fault.** 8 of the 11 clean
+traces were truncated to the last 3,000 tokens — the memory compromise made at 01:54 to stop the
+run thrashing. For a truncated trace the first read sits very late in the original reasoning,
+often after the model has already decided, so it starts ALREADY favouring the later answer and
+cannot show a crossing. 5 of the 8 truncated traces start above zero; all 3 non-truncated traces
+start below it. On those 3 (full early context): 2/3 cross vs 1/3 for the null, lean change
+median +9.64 vs +1.08 for the null. The crossing test needs the early window that truncation
+removed; the movement statistic survives truncation and is the one to quote.
+
+One clear failure worth keeping: 1944 -> −1944 (a sign flip) moves the WRONG way, −9.27 to
+−13.08. The readout does not follow a change of sign on an otherwise identical magnitude.
+
+**What this does to the project.** RESULT 4 said the method was never shown to detect a real
+answer reversal, so RESULT 1 and RESULT 2 ("decoded flips do not beat an arbitrary-pair null")
+could not be separated from "the checks are blind". They now can, on this model and readout: given
+a documented answer change, the leaning moves and the null does not. The two negative results
+therefore carry their intended weight — with the scope stated honestly: validated on a 1.5B text
+reasoning model with a forcing-suffix readout over numeric answers, not on the latent models
+themselves, where no corpus of documented reversals exists to validate against.

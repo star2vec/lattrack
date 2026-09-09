@@ -52,7 +52,7 @@ SUFFIX = "\n</think>\n\nThe final answer is \\boxed{"
 STRIDE = 96            # tokens between reads inside the dense window
 WINDOW_FRAC = 0.35     # dense reads over the last third of the trace
 N_EARLY = 4            # early baseline reads, evenly spaced over the rest
-MAX_TOKENS = 5000      # traces longer than this are truncated from the LEFT (keeps the switch;
+MAX_TOKENS = 3000      # traces longer than this are truncated from the LEFT (keeps the switch;
 # the median switch is at 90%, so the last 5k tokens contain it and a pre-switch stretch)
 EMPTY_EVERY = 4        # release the MPS allocator every N read positions: crop() does not free it,
 # and forward+crop cycles grew it until the machine swapped (2026-09-09, twice)
