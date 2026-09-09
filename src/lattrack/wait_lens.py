@@ -8,7 +8,7 @@ the four option letters at the next position (logsumexp over the "A" and " A"
 spellings). Two alternative suffixes ("So the answer is", "Answer:") give the
 decoder-noise floor: how much the leaning depends on the phrasing that elicits it.
 
-Positions read: every 4th token of the trace, plus every token in a window
+Positions read: every 16th token of the trace, plus every token in a window
 [w-6, w+12] around each "wait" token w. Controls: for each wait window a matched
 window of the same size centred at a seeded random position of the same trace at
 least 8 tokens from any wait ("elsewhere"). Nulls as before: the (correct, top
@@ -48,7 +48,9 @@ QUESTION_SEED = 20260909
 SUFFIXES = {"S0": "\n</think>\n\nThe correct answer is",
             "S1": "\n</think>\n\nSo the answer is",
             "S2": "\n</think>\n\nAnswer:"}
-BEFORE, AFTER, CLEAR, STRIDE = 6, 12, 8, 4
+BEFORE, AFTER, CLEAR, STRIDE = 6, 12, 8, 16  # windows stay dense; the background scan is
+# only for the end-of-trace leaning and extra decoder-noise samples, so it is sparse (fp32 is ~90 ms
+# per read on this machine and every position costs 3 forwards)
 
 
 # --- model ------------------------------------------------------------------------
@@ -68,28 +70,37 @@ def prompt_ids(tok, text, device):
 
 @torch.no_grad()
 def generate(model, ids, max_new):
-    out = model.generate(ids, max_new_tokens=max_new, do_sample=False,
+    out = model.generate(ids, attention_mask=torch.ones_like(ids), max_new_tokens=max_new,
+                         do_sample=False, temperature=None, top_p=None,
                          pad_token_id=model.config.eos_token_id)
     return out[0, ids.shape[1]:]
 
 
 @torch.no_grad()
-def build_cache(model, full_ids):
+def read_all(model, prompt_ids_t, trace, positions, suffix_ids, letter_ids, letter_set):
+    """One cache walked forward through the trace; at each read position each forcing
+    suffix is appended, its logits read, and the cache cropped back. The trace is
+    processed once (T tokens) instead of once per read, and nothing is copied."""
     from transformers import DynamicCache
     cache = DynamicCache()
-    model(input_ids=full_ids, past_key_values=cache, use_cache=True)
-    return cache
-
-
-@torch.no_grad()
-def read_cached(model, cache, keep, suffix_ids, letter_ids, letter_set):
-    c = copy.deepcopy(cache)
-    c.crop(keep)
-    out = model(input_ids=suffix_ids, past_key_values=c, use_cache=True)
-    row = out.logits[0, -1].float()
-    both = row[letter_ids]
-    return (torch.logsumexp(both, 0).tolist(), float(torch.softmax(row, -1)[letter_ids].sum()),
-            int(row.argmax()) in letter_set)
+    model(input_ids=prompt_ids_t, past_key_values=cache, use_cache=True)
+    P = prompt_ids_t.shape[1]
+    reads, pos = {}, 0
+    for t in positions:
+        if t > pos:
+            model(input_ids=trace[pos:t].unsqueeze(0), past_key_values=cache, use_cache=True)
+            pos = t
+        rd = {}
+        for k, sid in suffix_ids.items():
+            out = model(input_ids=sid, past_key_values=cache, use_cache=True)
+            row = out.logits[0, -1].float()
+            rd[k] = torch.logsumexp(row[letter_ids], 0).tolist()
+            if k == "S0":
+                rd["mass0"] = float(torch.softmax(row, -1)[letter_ids].sum())
+                rd["argmax_letter0"] = int(row.argmax()) in letter_set
+            cache.crop(P + t)
+        reads[t] = rd
+    return reads
 
 
 @torch.no_grad()
@@ -260,7 +271,8 @@ def main():
     p.add_argument("--n", type=int, default=40)
     p.add_argument("--max-new", type=int, default=600)
     p.add_argument("--device", default="mps")
-    p.add_argument("--dtype", default="bfloat16")
+    p.add_argument("--dtype", default="float32")  # bf16 perturbs the option logits by 0.03-0.06,
+    # the size of the margins measured here; fp32 matches a full forward to 5e-5 (checked 2026-09-09)
     p.add_argument("--dataset", default="arc_easy")
     p.add_argument("--out", default=str(ROOT / "results" / "wait"))
     p.add_argument("--fresh", action="store_true")
@@ -315,17 +327,8 @@ def main():
             controls = control_centres(T, waits, rng)
             positions = read_positions(T, waits, controls)
             full = torch.cat([ids, trace.unsqueeze(0)], 1)
-            cache = build_cache(model, full)
             P = ids.shape[1]
-            reads = {}
-            for t in positions:
-                rd = {}
-                for k, sid in suffix_ids.items():
-                    logits, mass, is_letter = read_cached(model, cache, P + t, sid, letter_ids, letter_set)
-                    rd[k] = logits
-                    if k == "S0":
-                        rd["mass0"], rd["argmax_letter0"] = mass, is_letter
-                reads[t] = rd
+            reads = read_all(model, ids, trace, positions, suffix_ids, letter_ids, letter_set)
             if trip is None:
                 # tripwire: cached readout equals a full forward at two positions (bf16 rounding allowed)
                 diffs = []
@@ -335,7 +338,7 @@ def main():
                     diffs.append(max(abs(x - y) for x, y in zip(a, b)))
                 trip = {"cached_vs_full_max_abs_diff": max(diffs), "positions": [positions[0], positions[len(positions) // 2]]}
                 print("tripwire:", trip, flush=True)
-                if trip["cached_vs_full_max_abs_diff"] > 0.1:
+                if trip["cached_vs_full_max_abs_diff"] > 0.01:
                     sys.exit("[stop] cached readout disagrees with the full forward")
             ci = LETTERS.index(q["answerKey"])
             row = {"schema": SCHEMA, "qid": q["id"], "qi": qi, "correct": q["answerKey"], "parsed": parsed,
@@ -349,6 +352,11 @@ def main():
             f.flush()
             existing[q["id"]] = row
             n_new += 1
+            del reads, full
+            if args.device == "mps":
+                torch.mps.empty_cache()
+            elif args.device == "cuda":
+                torch.cuda.empty_cache()
             print(f"  q{qi}: T={T} waits={len(waits)} parsed={parsed} correct={q['answerKey']} "
                   f"reads={len(positions)} ({(time.time() - t1) / n_new:.0f} s/question)", flush=True)
     per_q = (time.time() - t1) / max(n_new, 1)

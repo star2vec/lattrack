@@ -1,0 +1,146 @@
+{
+ "schema": "wait-lens-v1",
+ "n_questions": 24,
+ "n_with_wait": 18,
+ "waits_per_trace": {
+  "point": 1.5,
+  "lo": 1.0416666666666667,
+  "hi": 1.9166666666666667,
+  "n": 24
+ },
+ "trace_tokens_mean": 501.7083333333333,
+ "truncated": 7,
+ "accuracy_parsed": {
+  "point": 0.7058823529411765,
+  "lo": 0.47058823529411764,
+  "hi": 0.8823529411764706,
+  "n": 17
+ },
+ "unparsed": 7,
+ "end_leaning_matches_parsed_answer": {
+  "point": 1.0,
+  "lo": 1.0,
+  "hi": 1.0,
+  "n": 17
+ },
+ "decoder_noise_abs_gap_change": {
+  "q50": 0.8401908874511719,
+  "q90": 2.104087257385254,
+  "q95": 2.458160591125487,
+  "q99": 3.7030481529235817
+ },
+ "wait_windows": {
+  "n": 36,
+  "net_leader_change": {
+   "point": 0.05555555555555555,
+   "lo": 0.0,
+   "hi": 0.1388888888888889,
+   "n": 36
+  },
+  "direction": {
+   "toward_correct": 0,
+   "away_from_correct": 1,
+   "between_distractors": 1,
+   "none": 34
+  },
+  "real_pair_crossings_mean": {
+   "point": 0.25,
+   "lo": 0.027777777777777776,
+   "hi": 0.5284722222222185,
+   "n": 36
+  },
+  "distractor_pairs_crossings_mean": {
+   "point": 0.37037037037037035,
+   "lo": 0.19444444444444445,
+   "hi": 0.5555555555555556,
+   "n": 36
+  },
+  "real_pair_any_crossing": {
+   "point": 0.1111111111111111,
+   "lo": 0.027777777777777776,
+   "hi": 0.2222222222222222,
+   "n": 36
+  },
+  "distractor_pairs_any_crossing": {
+   "point": 0.3888888888888889,
+   "lo": 0.2222222222222222,
+   "hi": 0.5555555555555556,
+   "n": 36
+  },
+  "leader_changes_mean": {
+   "point": 0.2777777777777778,
+   "lo": 0.05555555555555555,
+   "hi": 0.5555555555555556,
+   "n": 36
+  },
+  "net_change_gated_q95": {
+   "point": 0.0,
+   "lo": 0.0,
+   "hi": 0.0,
+   "n": 36
+  },
+  "abs_gap_start_q50": 5.558224678039551,
+  "abs_gap_end_q50": 5.4695210456848145
+ },
+ "control_windows": {
+  "n": 36,
+  "net_leader_change": {
+   "point": 0.1111111111111111,
+   "lo": 0.027777777777777776,
+   "hi": 0.2222222222222222,
+   "n": 36
+  },
+  "direction": {
+   "toward_correct": 3,
+   "away_from_correct": 1,
+   "between_distractors": 0,
+   "none": 32
+  },
+  "real_pair_crossings_mean": {
+   "point": 0.2777777777777778,
+   "lo": 0.08333333333333333,
+   "hi": 0.5277777777777778,
+   "n": 36
+  },
+  "distractor_pairs_crossings_mean": {
+   "point": 0.33333333333333326,
+   "lo": 0.16666666666666666,
+   "hi": 0.5462962962962963,
+   "n": 36
+  },
+  "real_pair_any_crossing": {
+   "point": 0.16666666666666666,
+   "lo": 0.05555555555555555,
+   "hi": 0.3055555555555556,
+   "n": 36
+  },
+  "distractor_pairs_any_crossing": {
+   "point": 0.3611111111111111,
+   "lo": 0.2222222222222222,
+   "hi": 0.5277777777777778,
+   "n": 36
+  },
+  "leader_changes_mean": {
+   "point": 0.2777777777777778,
+   "lo": 0.08333333333333333,
+   "hi": 0.5277777777777778,
+   "n": 36
+  },
+  "net_change_gated_q95": {
+   "point": 0.027777777777777776,
+   "lo": 0.0,
+   "hi": 0.08333333333333333,
+   "n": 36
+  },
+  "abs_gap_start_q50": 4.685299873352051,
+  "abs_gap_end_q50": 4.7627339363098145
+ },
+ "wait_net_changes_present_under_all_suffixes": {
+  "point": 0.0,
+  "lo": 0.0,
+  "hi": 0.0,
+  "n": 2
+ },
+ "gate_sentence": "candidate, not adopted: |gap| at the window start and end both exceed the decoder-noise q95",
+ "conditions": {}
+}

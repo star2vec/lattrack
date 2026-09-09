@@ -272,3 +272,56 @@ trajectories at 24.9 s each, ~2 h. Files `results/huginn_easy/lens_{rows,summary
 Reading: raising accuracy from near-chance to 0.50 does not change the picture. The flip rate is
 if anything higher (0.68 vs 0.66 events) while the gate now keeps nothing at all. The "the model
 was at chance, so of course it wandered" objection to the ARC-Challenge result is closed.
+
+## 2026-09-09 — positive control: leaning across "wait" in a text reasoning model. FAILED.
+
+`src/lattrack/wait_lens.py`; DeepSeek-R1-Distill-Qwen-1.5B, float32, MPS, greedy, max 600 new
+tokens; 24 ARC-Easy questions (of 40 planned; stopped early, see the operational note).
+Readout: at position t of the trace, prompt + trace[:t] + a forcing suffix that closes the think
+block, then the four option letters at the next position (logsumexp over "A"/" A"). Three
+suffixes ("The correct answer is", "So the answer is", "Answer:") give the decoder-noise floor.
+Windows: [w-6, w+12] around each "wait" token; one matched control window per wait at a seeded
+random position >= 8 tokens from any wait; background scan every 16 tokens.
+Files `results/wait/wait_rows.jsonl`, `wait_summary.json`.
+
+- Traces: mean 502 tokens; 7 of 24 hit the 600-token cap before closing the think block; 7 of 24
+  gave no parseable letter. Accuracy on the 17 parsed 0.706. The end-of-trace leaning matches the
+  parsed answer in 17/17, so the readout does track the model's own answer.
+- Waits: 18 of 24 traces have at least one; 1.50 per trace [1.04, 1.92]; 36 wait windows and 36
+  matched control windows.
+- **Wait windows change less than control windows.** Net leader change across the window:
+  wait 0.056 [0.000, 0.139], control 0.111 [0.028, 0.222]. Real-pair crossing inside the window:
+  wait 0.111, control 0.167. Distractor-pair crossing: wait 0.389, control 0.361. Direction at
+  wait windows: 0 toward the correct answer, 1 away, 1 between distractors, 34 no change.
+- **Decoder noise is large.** |Δgap| across the three forcing suffixes: q50 0.84, q90 2.10,
+  q95 2.46. For comparison Huginn's init-seed noise was q50 0.12, q95 0.75. Changing the phrase
+  that elicits the answer moves the leaning by more than any within-trace event does.
+- **Nothing survives.** Across all 24 traces there are 50 leader changes at read positions.
+  Requiring both margins above the decoder q95 AND the same direction under all three suffixes:
+  **0 of 50**. Neither of the 2 wait-window net changes is present under all three suffixes.
+- The instrument is not dead in the weak sense: 13 of 24 traces show a leader change somewhere
+  and 6 end on a different leader than they started. But the final leaning is established at
+  trace fraction 0.17 (median; q90 0.64), i.e. the model commits in the first sixth of its
+  reasoning, and none of those changes clears the noise floor.
+
+Reading: the control does NOT validate the method. Two things are now true and must both go in
+the write-up. (1) Wait moments in this model are not where the decoded leaning changes; if
+anything it is steadier there than elsewhere. (2) With a forcing-suffix readout the decoder noise
+for a text model is larger than any within-trace change, so this instrument cannot certify a
+reversal as real on this model. The two negative results (2-layer, Huginn) therefore stand as
+"the checks find nothing above noise in these models", NOT as "these models demonstrably do not
+backtrack" — the stronger claim needs an instrument shown to find a reversal somewhere.
+
+Untried, in order of promise: use the TEXT as ground truth (traces that literally say "actually,
+it's B") and ask whether the decoded leaning follows a documented reversal; a hidden-state probe
+instead of a forcing suffix (avoids the phrasing sensitivity entirely); larger windows, since a
+reconsideration after "wait" may need more than 12 tokens to land.
+
+Operational note (embarrassing, kept): the run was planned for 40 questions and stopped at 24.
+bfloat16 perturbed the option logits by 0.03-0.06, the size of the effect, so the run used
+float32; the fp32 model plus the MPS caching allocator drove the machine into swap (19 of 20 GB)
+and per-question time went 188 s -> 1066 s. Adding `torch.mps.empty_cache()` per question
+recovered it to 96 s but only briefly. float16 was measured as a middle option (option-logit
+error 0.008-0.012, right at the tripwire bar) and not used. 24 questions in fp32 were preferred
+over 40 in a dtype whose error is the size of the signal. phoenix's CLAUDE.md had already
+recorded the MPS allocator growth; I should have read my own note.
