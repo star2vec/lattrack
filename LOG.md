@@ -423,3 +423,41 @@ its answer (4/4 unparsed, 0 waits). Generation of long traces from a 1.5B model 
 here alongside normal desktop use; hidden-state extraction and all analysis are (1.5 s and
 seconds respectively). The GSM8K four-option set (`data/gsm8k_options.json`, 200 questions,
 `mathopts.py`) is built and unused, ready if a machine with more memory becomes available.
+
+### RESULT 5: the negative result is not an artifact of the readout basis
+
+The objection (user, 2026-09-09; prior art 2604.09885, 2604.06374, 2608.25347): RESULT 1 read the
+leaning in the token-embedding basis, and the answer-relevant activity may live elsewhere —
+especially in a from-scratch model, where 2604.06374 reports superposition survives a logit lens.
+Test: capture each thought ONCE and read it two ways, then run the identical flip, null and noise
+analysis on both. `src/lattrack/jlens_flips.py`, bases copied from phoenix (fitted by its
+`fit_jlens.py` on train[500:2500] against these same checkpoints; `bases/README.txt`), 419 test
+graphs, base serialisation + 3 edge-only redraws, both accepted seeds. Files
+`results/seed{0,1}/jlens_{rows,summary}_all.json`.
+
+Crossing rate per transition, real pair (target, decoy) vs arbitrary pair vs matched pair:
+
+| transition | seed0 embedding | seed0 jacobian | seed1 embedding | seed1 jacobian |
+|---|---|---|---|---|
+| last | 0.320 / 0.317 / 0.283 | 0.317 / 0.370 / 0.369 | 0.368 / 0.365 / 0.386 | 0.375 / 0.368 / 0.416 |
+| last-1 | 0.325 / 0.411 / 0.324 | 0.384 / 0.425 / 0.440 | 0.382 / 0.394 / 0.386 | 0.389 / 0.442 / 0.369 |
+| last-2 | 0.290 / 0.396 / 0.227 | 0.392 / 0.456 / 0.454 | 0.364 / 0.419 / 0.261 | 0.341 / 0.401 / 0.395 |
+
+**In the causal-Jacobian basis the real pair still crosses no more often than an arbitrary pair,
+at any transition, on either seed.** Every jacobian cell has real <= one or both nulls. The
+verdict of RESULT 1 is unchanged by the basis.
+
+The Jacobian readout is not a worse instrument — it is a sharper one on every axis we can
+measure. Median |gap| at flips 1.88 (seed0) / 2.26 (seed1) vs 1.23 / 1.55 in the embedding basis;
+flips clearing the serialisation q95 0.412 / 0.447 vs 0.327 / 0.346; leader sequence identical
+across redraws 0.858 / 0.855 vs 0.848 / 0.842. So the null result is not "the readout is too
+blunt to see anything": a demonstrably sharper, causally-defined readout sees the same thing.
+
+Scope, stated precisely. This closes the BASIS form of the objection: it is not that we looked in
+the wrong linear directions. It does NOT close the SUPERPOSITION form. Both readouts take an
+argmax over candidates, which discards the case where two answers are held at comparable
+strength; the small margins we keep measuring (median |gap| 1.2-2.3 against a serialisation q95
+of 0.65-3.9) are consistent with candidates being held near-equally rather than swapped between.
+But "held simultaneously without a leader change" is not the claim under test: the literature
+claim (Cui & Ye's, and the readout-only genre generally) is about decoded belief FLIPS, and those
+flips do not survive either basis.
