@@ -242,3 +242,33 @@ this model the leader settles by about step 10 of 32 and what precedes it is ini
 wandering. Same shape as the 2-layer model. No thresholds adopted; the gate is reported as a
 candidate with its sentence. Not checked: their 260-item set (unreleased), K=30 vs 32, their
 25 permutations (2 reseeds + 1 rotation here), any renormalisation choice of theirs.
+
+## 2026-09-09 — Huginn on ARC-Easy (the "questions it mostly gets right" check)
+
+Same script and checks, K=30 (Cui & Ye's loop count) and all four cyclic option orders
+(base + 3 rotations: every option occupies every position once, the cheap stand-in for their 25
+random permutations). 50 ARC-Easy test questions, seeded shuffle, prefilled prompt, 300
+trajectories at 24.9 s each, ~2 h. Files `results/huginn_easy/lens_{rows,summary}*.json`.
+
+- Accuracy 0.500 [0.360, 0.640], up from 0.380 on ARC-Challenge, so the model is now clearly
+  above the 0.25 chance line. Mean over the four option orders 0.490; correct under EVERY order
+  only 0.100 [0.020, 0.200], so half the correct answers do not survive rotating the options.
+- Leader changes: every question has some; mean 5.3 per question (5.18 averaged over the four
+  orders); last change at step median 10 of 30; exploration end (their KL rule) median step 11.
+- Cui & Ye events 0.68 [0.54, 0.80] (0.645 averaged over orders). Accuracy on event questions
+  0.441 vs 0.625 on the others: on the easy set the questions that "backtrack" do WORSE, the
+  opposite sign to their +34%, though the intervals overlap.
+- Distractor-pair null, answering phase: real pair 0.880 [0.780, 0.960] vs distractor pairs
+  0.867 [0.807, 0.927]. Per bin, steps 1→4 0.540 vs 0.633; 4→8 0.860 vs 0.840; 8→16 0.540 vs
+  0.413; 16→30 0.200 vs 0.140. Never meaningfully above the null.
+- Noise: init-seed |Δgap| q50 0.12, q95 0.749; margins at answering-phase changes q50 0.12,
+  identical to the noise median. Leader agrees across reseeds at 0.898 of steps; the change set
+  is identical across reseeds in 8% of questions; the number of changes survives option rotation
+  in 22%.
+- Noise gate (candidate, not adopted; both margins > init-seed q95): 0 of 169 answering-phase
+  leader changes survive, in 0 of 50 questions. Real-pair crossings 2 of 114 (0.018),
+  distractor-pair crossings 1 of 277 (0.004).
+
+Reading: raising accuracy from near-chance to 0.50 does not change the picture. The flip rate is
+if anything higher (0.68 vs 0.66 events) while the gate now keeps nothing at all. The "the model
+was at chance, so of course it wandered" objection to the ARC-Challenge result is closed.

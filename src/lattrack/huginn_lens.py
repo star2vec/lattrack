@@ -60,10 +60,14 @@ SYSTEM = "You are a helpful assistant."
 
 # --- data -----------------------------------------------------------------------
 
-def load_questions(n, seed=QUESTION_SEED):
-    """n ARC-Challenge test questions with exactly four lettered options, drawn by a
-    seeded shuffle of the file order."""
-    rows = pq.read_table(ROOT / "data" / "arc_challenge_test.parquet").to_pylist()
+DATASET = "arc_challenge"   # set from --dataset
+
+
+def load_questions(n, seed=QUESTION_SEED, dataset=None):
+    """n ARC test questions (Challenge or Easy) with exactly four lettered options,
+    drawn by a seeded shuffle of the file order."""
+    dataset = dataset or DATASET
+    rows = pq.read_table(ROOT / "data" / f"{dataset}_test.parquet").to_pylist()
     ok = [r for r in rows if len(r["choices"]["text"]) == 4 and r["answerKey"] in LETTERS
           and r["choices"]["label"] == LETTERS]
     rng = random.Random(seed)
@@ -83,8 +87,12 @@ def conditions(q):
     out = [("base", opts, LETTERS[correct], 0),
            ("init_1", opts, LETTERS[correct], 1),
            ("init_2", opts, LETTERS[correct], 2)]
-    rot = opts[1:] + opts[:1]  # option at index i moves to i-1; the correct one moves too
-    out.append(("perm", rot, LETTERS[(correct - 1) % 4], 0))
+    # cyclic rotations: option at index i moves to i-k; the correct one moves too. With all
+    # three, every option appears in every position once across base+perm+perm2+perm3 (the
+    # cheap stand-in for Cui & Ye's 25 random permutations).
+    for k, name in ((1, "perm"), (2, "perm2"), (3, "perm3")):
+        rot = opts[k:] + opts[:k]
+        out.append((name, rot, LETTERS[(correct - k) % 4], 0))
     return out
 
 
@@ -222,6 +230,17 @@ def summarize(rows, K):
                                          for k in range(K)],
         }
     out["accuracy_perm"] = bootstrap([float(d(by[(r["qid"], "perm")])["correct"]) for r in base if (r["qid"], "perm") in by], np.mean)
+    rots = [c for c in ("base", "perm", "perm2", "perm3") if any((r["qid"], c) in by for r in base)]
+    if len(rots) > 1:
+        full = [r for r in base if all((r["qid"], c) in by for c in rots)]
+        out["rotations"] = {
+            "orders": rots, "n_questions_with_all": len(full),
+            "accuracy_by_order": {c: bootstrap([float(d(by[(r["qid"], c)])["correct"]) for r in full], np.mean) for c in rots},
+            "accuracy_mean_over_orders": bootstrap([np.mean([float(d(by[(r["qid"], c)])["correct"]) for c in rots]) for r in full], np.mean),
+            "correct_under_every_order": bootstrap([float(all(d(by[(r["qid"], c)])["correct"] for c in rots)) for r in full], np.mean),
+            "cui_ye_event_rate_mean_over_orders": bootstrap([np.mean([float(d(by[(r["qid"], c)])["cui_ye_event"]) for c in rots]) for r in full], np.mean),
+            "leader_changes_mean_over_orders": bootstrap([np.mean([float(d(by[(r["qid"], c)])["n_changes"]) for c in rots]) for r in full], np.mean),
+        }
     out["questions_with_any_leader_change"] = bootstrap([float(d(r)["n_changes"] > 0) for r in base], np.mean)
     out["mean_leader_changes_per_question"] = bootstrap([float(d(r)["n_changes"]) for r in base], np.mean)
     out["cui_ye_backtracking_rate"] = bootstrap([float(d(r)["cui_ye_event"]) for r in base], np.mean)
@@ -321,7 +340,8 @@ def fmt(b):
 
 
 def table(s, cond):
-    lines = [f"**Huginn-0125 per-loop lens, ARC-Challenge, {s['n_questions']} questions, K={s['K']}** "
+    ds = (s.get("conditions") or {}).get("dataset", cond.get("dataset", "ARC"))
+    lines = [f"**Huginn-0125 per-loop lens, {ds}, {s['n_questions']} questions, K={s['K']}** "
              f"({cond['device']}, {cond['dtype']}, {cond['seconds_per_trajectory']:.1f} s per trajectory of {s['K']} steps)",
              f"accuracy: base {fmt(s['accuracy_base'])}, options rotated {fmt(s['accuracy_perm'])}",
              (f"readout position: vocab mass on the letter tokens at the last step median "
@@ -361,6 +381,14 @@ def table(s, cond):
                      f"{fmt(n['leader_agreement_per_step'])}; change set identical {fmt(n['change_set_identical'])}")
     lines.append(f"position cell (options rotated): same correctness {fmt(s['perm_cell']['same_correctness'])}; "
                  f"same number of changes {fmt(s['perm_cell']['same_number_of_changes'])}")
+    ro = s.get("rotations")
+    if ro:
+        lines.append(f"all {len(ro['orders'])} option orders (n={ro['n_questions_with_all']}): accuracy by order "
+                     + ", ".join(f"{c} {v['point']:.2f}" for c, v in ro["accuracy_by_order"].items())
+                     + f"; mean over orders {fmt(ro['accuracy_mean_over_orders'])}; correct under every order "
+                     f"{fmt(ro['correct_under_every_order'])}; Cui & Ye event rate mean over orders "
+                     f"{fmt(ro['cui_ye_event_rate_mean_over_orders'])}; leader changes mean over orders "
+                     f"{fmt(ro['leader_changes_mean_over_orders'])}")
     lines.append(f"exploration end (KL <= 0.01 for 3 steps): median step {s['exploration_end_step']['median']}, "
                  f"never {s['exploration_end_step']['never']}")
     return "\n".join(lines)
@@ -379,9 +407,11 @@ def main():
     p.add_argument("--fresh", action="store_true")
     p.add_argument("--prompt-style", default="chat", choices=("chat", "chat_prefill", "plain"))
     p.add_argument("--summarize-only", action="store_true", help="recompute the summary from the rows; no model")
+    p.add_argument("--dataset", default="arc_challenge", choices=("arc_challenge", "arc_easy"))
     args = p.parse_args()
-    global PROMPT_STYLE
+    global PROMPT_STYLE, DATASET
     PROMPT_STYLE = args.prompt_style
+    DATASET = args.dataset
     if args.summarize_only:
         out_dir = Path(args.out)
         rows = [json.loads(l) for l in open(out_dir / "lens_rows.jsonl") if l.strip()]
@@ -457,7 +487,7 @@ def main():
     rows = list(existing.values())
     summary = summarize(rows, args.K)
     summary["conditions"] = {"model": MODEL_ID, "device": args.device, "dtype": args.dtype, "K": args.K,
-                             "dataset": "allenai/ai2_arc ARC-Challenge test, four-option questions, seeded shuffle",
+                             "dataset": f"allenai/ai2_arc {args.dataset} test, four-option questions, seeded shuffle",
                              "question_seed": QUESTION_SEED, "prompt_style": args.prompt_style,
                              "prompt": "question + lettered options; see prompt_ids() for the three styles",
                              "readout": "predict_from_latents at each recurrent step, last position, logits of ' A'..' D'",
