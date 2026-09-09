@@ -360,3 +360,66 @@ question, so the device conclusion does not transfer to a 1.5B model. The memory
 transfer and already bit once (2026-09-09, 188 s -> 1066 s per question, 19 of 20 GB swap):
 every new run calls torch.mps.empty_cache() after each question or batch. Batched generation
 measured at the same time: 192 ms per token per sequence at batch 1, 104 ms at batch 4.
+
+## 2026-09-09 (evening) — items 1 and 2: ground truth found, probe failed
+
+**Item 2, the hidden-state probe: FAILED for lack of training data, not for tuning.**
+Fitted on the 24 ARC-Easy traces recovered into `results/traces_easy` (their stored text
+round-trips to exact token ids, 24/24, wait positions intact, so no regeneration was needed;
+hidden states cost one forward each, 1.5 s). 17 traces have a parsed answer. Target = the
+model's own final answer; training positions = the last quarter of each trace; split by
+question. Held-out accuracy by 4-fold cross-validation over questions, against chance 0.25 and a
+majority-class baseline of 0.412:
+
+| layer | dims | L2=1 | L2=20 | L2=200 |
+|---|---|---|---|---|
+| last | 1536 | 0.154 | 0.140 | 0.119 |
+| last | 64 (PCA) | 0.114 | 0.108 | 0.098 |
+| last | 16 (PCA) | 0.110 | 0.101 | 0.075 |
+| mid | 1536 | 0.175 | 0.155 | 0.132 |
+| mid | 64 (PCA) | 0.163 | 0.153 | 0.109 |
+| mid | 16 (PCA) | 0.115 | 0.109 | 0.091 |
+
+Every cell is BELOW chance; training accuracy is 1.000. With 11-13 training questions the probe
+memorises the training answers and, on held-out questions whose answers differ, scores worse than
+guessing. Positions within a question are not independent, so the effective n is the number of
+questions, not the 1276 positions. A usable probe needs on the order of hundreds of traces, which
+this machine cannot generate (below). The probe readout is therefore NOT available as a
+replacement for the forcing-suffix readout, and RESULT 4 stands unrelieved.
+
+**Item 1, ground truth: the stated reversals are not answer reversals.**
+The wider pattern in `traces.py` finds 5 stated reversals in 4 of the 24 traces. All existing
+forcing-suffix reads bracket them, so this needed no new compute. Decoder-noise q95 = 2.46.
+
+| trace | phrase | leaning across it | margins | clears noise | same under all 3 suffixes |
+|---|---|---|---|---|---|
+| Mercury_7282695 | "Wait, no" | D -> A | 0.08 / 0.01 | no | no |
+| Mercury_7007858 | "that's not right" | A -> A | 8.57 / 8.53 | yes | yes |
+| Mercury_SC_LBS10272 | "Wait, no" | A -> A | 2.47 / 2.59 | yes | yes |
+| Mercury_SC_LBS10272 | "Wait, no" | A -> A | 3.03 / 3.02 | yes | yes |
+| Mercury_7126613 | "Wait, no" | C -> C | 7.86 / 7.86 | yes | yes |
+
+Reading the surrounding text, none of the five announces a different ANSWER. They correct an
+intermediate claim ("Wait, that's not right. Heat flows from a hotter object to a cooler one"),
+a geometric statement ("Wait, no, the tilt is the same for both hemispheres"), or a misreading of
+the question ("Wait, no, the question is asking which two behaviors"). The one case where the
+decoded leader moves (D -> A) has margins of 0.08 and 0.01, far below the 2.46 noise floor, and
+occurs in a trace with no parsed final answer.
+
+So on the only ground truth this corpus offers, the instrument behaves correctly: no answer
+reversal is stated and none is decoded, with the four stable cases sitting well above the noise
+floor and agreeing under all three suffixes. What remains UNTESTED is the instrument's
+sensitivity, because the corpus contains no stated answer reversal to detect.
+
+**This reframes RESULT 3 rather than contradicting it.** "Wait" in this model marks the
+correction of an intermediate claim, not a change of the answer. The steadiness of the decoded
+leaning across wait windows is then the correct reading, not a failure of the readout. The
+write-up should state RESULT 3 this way and cite these five cases as the reason.
+
+**Hardware, for the record.** Two attempts to generate longer traces failed on this 16 GB
+machine: float32 with batch 4 at 1024 tokens filled 27 GB of swap (38 min for one batch), and
+float16 with batch 2 at 768 tokens ran at 410 s per trace and truncated every math trace before
+its answer (4/4 unparsed, 0 waits). Generation of long traces from a 1.5B model is not viable
+here alongside normal desktop use; hidden-state extraction and all analysis are (1.5 s and
+seconds respectively). The GSM8K four-option set (`data/gsm8k_options.json`, 200 questions,
+`mathopts.py`) is built and unused, ready if a machine with more memory becomes available.

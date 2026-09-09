@@ -1,0 +1,160 @@
+{
+ "schema": "probe-lens-v1",
+ "n_traces": 24,
+ "n_usable": 17,
+ "probe": {
+  "layer": "last",
+  "target": "the model's own final answer",
+  "train_questions": 11,
+  "test_questions": 6,
+  "train_positions": 1276,
+  "accuracy_train": 1.0,
+  "accuracy_heldout": 0.1225071225071225,
+  "l2": 1.0,
+  "tail_frac": 0.75
+ },
+ "refit_noise_abs_gap_change": {
+  "q50": 1.3743914365768433,
+  "q90": 5.032616806030275,
+  "q95": 6.656773543357849,
+  "q99": 9.82933574676513
+ },
+ "n_bootstrap_probes": 20,
+ "gate_sentence": "candidate, not adopted: both margins exceed the refit q95",
+ "wait_vs_control": {
+  "wait_windows": {
+   "n": 21,
+   "net_leader_change": {
+    "point": 0.09523809523809523,
+    "lo": 0.0,
+    "hi": 0.23809523809523808,
+    "n": 21
+   },
+   "real_pair_any_crossing": {
+    "point": 0.5238095238095238,
+    "lo": 0.3333333333333333,
+    "hi": 0.7619047619047619,
+    "n": 21
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 1.0,
+    "lo": 1.0,
+    "hi": 1.0,
+    "n": 21
+   },
+   "leader_changes_mean": {
+    "point": 3.1904761904761907,
+    "lo": 1.8095238095238095,
+    "hi": 4.619047619047619,
+    "n": 21
+   },
+   "direction": {
+    "toward_correct": 0,
+    "away_from_correct": 0,
+    "between_distractors": 2,
+    "none": 19
+   }
+  },
+  "control_windows": {
+   "n": 21,
+   "net_leader_change": {
+    "point": 0.14285714285714285,
+    "lo": 0.0,
+    "hi": 0.2857142857142857,
+    "n": 21
+   },
+   "real_pair_any_crossing": {
+    "point": 0.5714285714285714,
+    "lo": 0.38095238095238093,
+    "hi": 0.7619047619047619,
+    "n": 21
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 1.0,
+    "lo": 1.0,
+    "hi": 1.0,
+    "n": 21
+   },
+   "leader_changes_mean": {
+    "point": 3.9523809523809526,
+    "lo": 2.379761904761907,
+    "hi": 5.619047619047619,
+    "n": 21
+   },
+   "direction": {
+    "toward_correct": 1,
+    "away_from_correct": 0,
+    "between_distractors": 2,
+    "none": 18
+   }
+  }
+ },
+ "ground_truth": [
+  {
+   "qid": "Mercury_7007858",
+   "phrase": "that's not right",
+   "char_start": 1882,
+   "token_est": 441,
+   "window": [
+    401,
+    501
+   ],
+   "leader_before": "A",
+   "leader_after": "A",
+   "switched": false,
+   "named_after": null,
+   "matches_named": false,
+   "final_answer": "A",
+   "ends_at_after": true,
+   "margin_before": 6.514829635620117,
+   "margin_after": 10.543697357177734,
+   "clears_noise": false,
+   "bootstrap_agreement": 0.75,
+   "context": "e is a uniform solid, so all sides should be the same temperature.  D. Heat from the ice cube moves into the air. Wait, that's not right. Heat flows from a hotter object to a cooler one. So, the warm air is hotter, so it's absorbing heat from the ice cube. The ice cube is losing heat, not the ai"
+  },
+  {
+   "qid": "Mercury_SC_LBS10272",
+   "phrase": "Wait, no",
+   "char_start": 511,
+   "token_est": 105,
+   "window": [
+    65,
+    165
+   ],
+   "leader_before": "C",
+   "leader_after": "A",
+   "switched": true,
+   "named_after": null,
+   "matches_named": false,
+   "final_answer": "A",
+   "ends_at_after": true,
+   "margin_before": 3.0858590602874756,
+   "margin_after": 3.4561710357666016,
+   "clears_noise": false,
+   "bootstrap_agreement": 0.375,
+   "context": "he year.  When the South Pole is tilted toward the Sun, that means the Northern Hemisphere is tilted away from the Sun. Wait, no, actually, the tilt is such that the South Pole is tilted toward the Sun, which would mean that the Northern Hemisphere is tilted away. So, the part of the Ear"
+  },
+  {
+   "qid": "Mercury_SC_LBS10272",
+   "phrase": "Wait, no",
+   "char_start": 910,
+   "token_est": 188,
+   "window": [
+    148,
+    248
+   ],
+   "leader_before": "A",
+   "leader_after": "A",
+   "switched": false,
+   "named_after": null,
+   "matches_named": false,
+   "final_answer": "A",
+   "ends_at_after": true,
+   "margin_before": 9.567803382873535,
+   "margin_after": 7.889742374420166,
+   "clears_noise": true,
+   "bootstrap_agreement": 0.625,
+   "context": "e. But the question is about the South Pole being tilted toward the Sun, so that would affect the Southern Hemisphere.  Wait, no, the tilt is the same for both hemispheres, but the direction depends on the hemisphere. So, when the South Pole is tilted toward the Sun, the Northern Hemisph"
+  }
+ ]
+}
