@@ -67,7 +67,10 @@ def load_questions(n, seed=QUESTION_SEED, dataset=None):
     """n ARC test questions (Challenge or Easy) with exactly four lettered options,
     drawn by a seeded shuffle of the file order."""
     dataset = dataset or DATASET
-    rows = pq.read_table(ROOT / "data" / f"{dataset}_test.parquet").to_pylist()
+    if dataset == "gsm8k":   # built by mathopts.py, already in the ARC schema
+        rows = json.load(open(ROOT / "data" / "gsm8k_options.json"))
+    else:
+        rows = pq.read_table(ROOT / "data" / f"{dataset}_test.parquet").to_pylist()
     ok = [r for r in rows if len(r["choices"]["text"]) == 4 and r["answerKey"] in LETTERS
           and r["choices"]["label"] == LETTERS]
     rng = random.Random(seed)
@@ -407,7 +410,7 @@ def main():
     p.add_argument("--fresh", action="store_true")
     p.add_argument("--prompt-style", default="chat", choices=("chat", "chat_prefill", "plain"))
     p.add_argument("--summarize-only", action="store_true", help="recompute the summary from the rows; no model")
-    p.add_argument("--dataset", default="arc_challenge", choices=("arc_challenge", "arc_easy"))
+    p.add_argument("--dataset", default="arc_challenge", choices=("arc_challenge", "arc_easy", "gsm8k"))
     args = p.parse_args()
     global PROMPT_STYLE, DATASET
     PROMPT_STYLE = args.prompt_style

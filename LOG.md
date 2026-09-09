@@ -325,3 +325,38 @@ recovered it to 96 s but only briefly. float16 was measured as a middle option (
 error 0.008-0.012, right at the tripwire bar) and not used. 24 questions in fp32 were preferred
 over 40 in a dtype whose error is the size of the signal. phoenix's CLAUDE.md had already
 recorded the MPS allocator growth; I should have read my own note.
+
+### RESULT 3 (numbered for the write-up): at "wait", the decoded leaning is steadier, not less steady
+
+DeepSeek-R1-Distill-Qwen-1.5B, 24 ARC-Easy questions, float32, forcing-suffix readout;
+36 wait windows [w-6, w+12] and 36 matched control windows (same trace, >= 8 tokens from any
+wait, seeded). Numbers from `results/wait/wait_summary.json`:
+
+| | wait windows | control windows |
+|---|---|---|
+| net leader change across the window | 0.056 [0.000, 0.139] | 0.111 [0.028, 0.222] |
+| real-pair crossing inside the window | 0.111 [0.028, 0.222] | 0.167 [0.056, 0.306] |
+| distractor-pair crossing inside the window | 0.389 [0.222, 0.556] | 0.361 [0.222, 0.528] |
+| direction (toward correct / away / between / none) | 0 / 1 / 1 / 34 | 3 / 1 / 0 / 32 |
+
+The point estimate for the real pair is LOWER at wait windows than at matched windows elsewhere
+in the same traces, while the distractor-pair rate is the same in both. Intervals overlap, so the
+claim the numbers support is "no elevation at wait", not "significantly steadier". This holds
+whatever the readout turns out to be worth, because the wait and control windows share the
+readout; it is a within-instrument comparison. Sits alongside RESULT 1 (2-layer model: decoded
+flips do not beat arbitrary-pair crossings) and RESULT 2 (Huginn: per-loop flips at the
+init-seed noise floor on ARC-Challenge and ARC-Easy alike). RESULT 4 is the instrument
+limitation: the forcing-suffix readout's phrasing noise (q95 2.46) exceeds every within-trace
+change, so 0 of 50 leader changes survive it.
+
+### Machine-constraint check before the next runs (standing rule from 2026-09-09)
+
+phoenix README lines 57-60 record: on this Mac use CPU for analysis, because batch-one forwards
+on the 2-layer model take 25 ms on CPU vs 178 ms on MPS and the MPS allocator grows by hundreds
+of MB per few dozen forwards (a run was killed for memory). Checked against this model before
+running: for DeepSeek-R1-Distill-Qwen-1.5B in float32 the ordering REVERSES, MPS 183 ms vs CPU
+296 ms per generated token and 175 ms vs 548 ms per suffix read, about 123 s vs 247 s per
+question, so the device conclusion does not transfer to a 1.5B model. The memory warning does
+transfer and already bit once (2026-09-09, 188 s -> 1066 s per question, 19 of 20 GB swap):
+every new run calls torch.mps.empty_cache() after each question or batch. Batched generation
+measured at the same time: 192 ms per token per sequence at batch 1, 104 ms at batch 4.
