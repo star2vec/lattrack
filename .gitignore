@@ -6,3 +6,7 @@ __pycache__/
 *.pyc
 .DS_Store
 results/**/*.log
+# raw dataset downloads (fetched by curl; see README/LOG for the URLs)
+data/*.parquet
+# hidden states: 66 MB, regenerated in ~40 s by traces.py --phase hidden
+results/*/hidden/
