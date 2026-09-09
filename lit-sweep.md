@@ -106,3 +106,67 @@ The central architectural fact, confirmed from the primary papers, is that **"re
 - **Architecture quotes** for Huginn (2502.05171, KV-cache sharing section) and Ouro (2510.25741, §5.4.2 / Table 14) are from the primary papers; the "grows linearly" framing and per-loop-addressability details come partly from third-party follow-ups (MELT 2605.07721, Looped Latent Attention 2607.15456) and are secondary analyses consistent with, but not fully stated by, the original authors.
 - **"Revisit vs. override" is an operational framing**, not a standard term in the literature; a reviewer may map it onto existing "necessity/sufficiency" (Dynamics) or "resilience/Counterfactual++" (Thought Branches) language, which should be cited to preempt that.
 - Structural numbers (Huginn's 2/4/2 blocks, ~num_steps=64; Ouro's 4 recurrent steps) come from primary/secondary sources but should be re-verified against current model cards before running experiments.
+---
+
+# Appendix: re-check of 2026-09-09
+
+The sweep above was written for the wider version of the project. This appendix records a
+targeted re-check of its three load-bearing claims, plus what the pilot's own results now need
+from the literature. Verified against arXiv abstracts/HTML on 2026-09-09.
+
+## What still stands
+
+**The revisit-vs-override gap is OPEN.** No paper tests whether a later latent step attends back
+to, or re-reads, a specific earlier latent state at the moment the decoded answer changes.
+Nearest neighbour remains Dynamics within Latent CoT (2602.08783, ICML 2026): its step-wise
+do-interventions build "latent influence graphs" that are "dominated by skip connections", i.e.
+influence bypasses intermediate steps. That measures the effect of perturbing step i on step j,
+not retrieval of step i by step j, and it never analyses an answer reversal. Cite and
+differentiate; it is the paper a reviewer will raise.
+
+**No critique of Cui & Ye (2602.08100) exists.** Semantic Scholar lists one citing paper, LPG
+(2605.17329), on an unrelated topic (latent policy guardrails). Observable Patterns (2606.12689)
+and Dilgren & Wiegreffe (2604.04902) attack the same genre of claim, decodability does not imply
+mechanism, without naming it. Our Huginn result (RESULT 2) is therefore unclaimed ground.
+
+## What must be corrected in the sweep's framing
+
+**"Nulls are absent from this literature" is too strong — soften, do not retract.**
+- Dilgren & Wiegreffe, "Are Latent Reasoning Models Easily Interpretable?" (2604.04902, Apr 2026),
+  Coconut/CODI on GSM8k-Aug / PrOntoQA / ProsQA: vocabulary projection recovers gold traces
+  65-93% for correct predictions against an explicit null of five traces sampled from OTHER
+  problems, which match at 2-8%; plus identically-trained latent / explicit / no-reasoning
+  controls.
+- Observable Patterns (2606.12689) uses non-latent baselines and a rank-matched random
+  orthonormal basis control.
+Neither runs the two checks this project uses: a tracked-pair-versus-arbitrary-token null on a
+per-step belief trajectory, or re-runs under a different random seed / serialisation as the noise
+floor. The defensible claim is that specific pair, not "no nulls exist".
+
+## New, and directly relevant to the pilot's own weakness
+
+The pilot's open problem is that its readout may be blind by construction: it reads the answer in
+the token-unembedding basis, and reconsideration may live elsewhere or be held in superposition
+without a change of leader. This criticism has prior art, which we should cite rather than
+present as our own:
+- **"What do your logits know?" (2604.09885)** — information exists in bases orthogonal to the
+  unembedding direction, which logits cannot see. Clearest prior art for the criticism.
+- **"The Illusion of Superposition?" (2604.06374, Apr 2026, rev. Aug 2026)** — logit lens plus
+  entity probes across training-free / fine-tuned / from-scratch latent CoT; superposition of
+  candidates collapses within a few layers EXCEPT in from-scratch models. Our 2-layer substrate
+  is from-scratch, so this predicts simultaneously-held candidates are live exactly there.
+- **"Short Horizons and Sparse Concepts" (2608.25347, Aug 2026)** — a gradient/Jacobian readout
+  replacing the logit-lens identity; the logit lens "works near the output but often fails
+  earlier". Not yet applied to latent reasoning models.
+Consequence for us: the causal-Jacobian rerun of the flip analysis is the field-standard remedy,
+not an invention, and the novelty is its application to a backtracking claim.
+
+**RecurTrace (2609.03379, Sep 2026)** adds Loop Memory Attention so each iteration can attend to
+its own earlier states — it BUILDS the revisit substrate that Huginn and Ouro lack — with no
+interpretability analysis. The obvious target if revisit ever becomes testable.
+
+**ReasonOps (2605.29192, 28 May 2026)**, 12 thinking LLMs, 44,662 traces: on GPQA-Diamond,
+backtracking events split Local 85.4% / Sub-Problem 12.8% / Global 1.6% (Table 7, App. H). This
+independently corroborates the pilot's own ground-truth finding that stated reversals correct an
+intermediate claim rather than the answer, and it sets the base rate for filtering any downloaded
+trace corpus.
