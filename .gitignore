@@ -10,3 +10,5 @@ results/**/*.log
 data/*.parquet
 # hidden states: 66 MB, regenerated in ~40 s by traces.py --phase hidden
 results/*/hidden/
+# 3.73 GB source corpus; re-fetch with the URL in src/lattrack/reversals.py
+data/backtracking/

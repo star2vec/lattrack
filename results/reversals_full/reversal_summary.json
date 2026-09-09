@@ -1,0 +1,23 @@
+{
+ "source": "data/backtracking/full.json",
+ "traces": 193767,
+ "has_backtracking": 82642,
+ "reversal": 198,
+ "reversal_and_flagged": 135,
+ "reversal_not_flagged": 63,
+ "stated": 21,
+ "single_boxed": 152550,
+ "no_boxed": 5176,
+ "reversal_correct_final": 115,
+ "complete": 187963,
+ "multi_part_excluded": 33737,
+ "stated_and_flagged": 15,
+ "non_numeric_excluded": 22901,
+ "rate_flagged_of_all": 0.4265,
+ "rate_reversal_of_all": 0.001,
+ "rate_reversal_of_flagged": 0.0016,
+ "rate_stated_of_reversal": 0.1061,
+ "tail_chars": 400,
+ "min_separation_chars": 400,
+ "definition": "commitment = a \\boxed{} payload; reversal = the last commitment differs from an earlier one after normalising LaTeX/number formatting"
+}

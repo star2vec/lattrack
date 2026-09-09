@@ -1,0 +1,23 @@
+{
+ "source": "data/backtracking/slice.json",
+ "traces": 11585,
+ "has_backtracking": 4932,
+ "reversal": 8,
+ "reversal_and_flagged": 8,
+ "reversal_not_flagged": 0,
+ "stated": 0,
+ "single_boxed": 9167,
+ "no_boxed": 316,
+ "reversal_correct_final": 4,
+ "complete": 11222,
+ "multi_part_excluded": 1980,
+ "stated_and_flagged": 0,
+ "non_numeric_excluded": 1294,
+ "rate_flagged_of_all": 0.4257,
+ "rate_reversal_of_all": 0.0007,
+ "rate_reversal_of_flagged": 0.0016,
+ "rate_stated_of_reversal": 0.0,
+ "tail_chars": 400,
+ "min_separation_chars": 400,
+ "definition": "commitment = a \\boxed{} payload; reversal = the last commitment differs from an earlier one after normalising LaTeX/number formatting"
+}

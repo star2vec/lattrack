@@ -461,3 +461,74 @@ of 0.65-3.9) are consistent with candidates being held near-equally rather than 
 But "held simultaneously without a leader change" is not the claim under test: the literature
 claim (Cui & Ye's, and the readout-only genre generally) is about decoded belief FLIPS, and those
 flips do not survive either basis.
+
+## 2026-09-09 (late) — downloaded reversal corpus and the filter that finds real answer changes
+
+Source: `uzaymacar/openr1_math_backtracking_dataset` (193,767 DeepSeek-R1 traces over
+OpenR1-Math-220k, MIT, ungated, one 3.73 GB JSON file, no shards). Downloaded by byte range for
+development (220 MB = 11,585 traces at ~13 MB/s), then in full. `src/lattrack/reversals.py`.
+The dataset's own `has_backtracking` flag is true on 42.6% of traces here (matching its card's
+42.7%) and is NOT the label we need: it marks any doubling back, and ReasonOps (2605.29192,
+Table 7) puts the global, answer-changing share at 1.6%.
+
+Recomputed label: a trace COMMITS whenever it writes \boxed{...}; a REVERSAL is a trace whose
+last commitment differs from an earlier one. Four versions were needed, and each failure is a
+different way of manufacturing a reversal out of formatting:
+
+| version | rule added | reversal rate (of 11,585) | what was still wrong |
+|---|---|---|---|
+| v1 | last commitment differs from an earlier one | 19.35% | multi-part answers: "the ship is \boxed{10} km/h and the river is \boxed{4}" |
+| v2 | exclude tail blocks holding several values; require 400 chars of separation | 4.38% | equal values written differently (⌊(n²−2)/2⌋ vs ⌊n²/2⌋−1), empty boxes, case splits |
+| v3 | numeric commitments only; collapse whitespace; drop empty boxes | 0.71% | lists of answers parsed as numbers |
+| v4 | sub-question markers in the problem; comma bug fixed | 0.07% | usable |
+
+The v3 bug is the one to remember: commas were stripped to normalise thousands separators, which
+silently turned the LIST "0, 1, 2" into the NUMBER 12. Four of that version's twelve survivors
+were traces where the model was only deciding how to format a multi-answer list. Same class of
+error as trusting the dataset flag, reached from the other direction. Now "1,000" -> num:1000
+while "0, 1, 2" -> list:0,1,2 and is excluded.
+
+Yield on the 220 MB slice: 8 candidates from 11,585 traces (0.07% of all, 0.16% of flagged),
+7 of 8 also carry the dataset flag. All 8 were hand-read: 6-8 are genuine changes of the
+committed answer (a recount giving 11 rather than 15; choosing 416 over 420 on significant
+figures; settling on 69 after two conflicting derivations; two traces weighing coding theory
+against Katona's theorem and ending on 11 after writing 12). The rest are borderline, e.g. a
+problem with a missing input where the model guesses.
+
+Honest limits of this filter. (a) Most survivors are the model CHOOSING between two values it
+derived, not announcing "I was wrong" — fine for validating a readout, since the committed answer
+demonstrably moves, but they should not be called self-corrections in the write-up. (b) The rate
+is now BELOW ReasonOps' 1.6%, so the filter is over-strict; that is the right direction for a
+validation set, where precision beats recall. (c) `stated` (an explicit phrase near the switch)
+survives on none of the 8, so the phrase and the value change are close to disjoint signals here.
+
+### Full corpus: 198 validated answer-reversal traces (the validation set the method needed)
+
+Filter v4 over all 193,767 traces (`results/reversals_full/`): 82,642 carry the dataset's
+`has_backtracking` flag (42.65%); 33,737 excluded as multi-part; 22,901 excluded as non-numeric;
+**198 traces are genuine answer reversals** (0.10% of all, 0.16% of flagged). Of those, 21 also
+state the switch in words. Final answer matches the gold solution in 115 of 198. Median trace
+21,509 characters, median switch at 90% of the trace — reversals happen LATE, which the readout
+design must account for (dense reads near the end, not a uniform scan).
+
+Hand-read 11 of the 198 (all 6 shown of the stated subset, 5 random unstated). The stated subset
+is essentially exact ground truth:
+- "in my initial answer, I wrote 12. That must be an error. Therefore, the correct answer is 2"
+- "the previous final answer boxed as 9 is incorrect. It must be a mistake" -> 3
+- "1344 is invalid. Therefore, the correct answer is 672" (from 1343)
+- 144 -> 133 twice (subtracting the empty and single-element subsets), 1944 -> -1944 (sign)
+Of the 5 unstated: 3 clearly genuine (including "My mistake earlier was a typo in the numerator",
+134,217,528 -> 134,215,680 — which the `stated` regex missed, so that flag UNDER-counts),
+1 borderline (2.77 -> 83/30, exact-vs-rounded preference), 1 unclear from the context window.
+
+`results/reversals_full/validation_set.jsonl` (5.9 MB, 198 rows) is self-contained: problem,
+gold solution, full trace text, the ordered list of commitments with character offsets, the
+switch point, and the stated phrase where present. It does not depend on the 3.73 GB download
+(gitignored; re-fetchable from the URL in reversals.py).
+
+**What this unblocks.** RESULT 4 said the method is unvalidated: we had never shown the checks can
+detect a real answer reversal, so "no backtracking above noise" was confounded with "the checks
+are blind". These 198 traces are the missing positive control, and the readout runs teacher-forced
+over given text — forward passes only, no generation, which is the operation this machine can
+afford (1.5 s per trace for hidden states). The same corpus also fixes the probe's training-data
+shortage that sank item 2 (below-chance held-out accuracy on 17 traces).
