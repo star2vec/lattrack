@@ -532,3 +532,45 @@ are blind". These 198 traces are the missing positive control, and the readout r
 over given text — forward passes only, no generation, which is the operation this machine can
 afford (1.5 s per trace for hidden states). The same corpus also fixes the probe's training-data
 shortage that sank item 2 (below-chance held-out accuracy on 17 traces).
+
+## 2026-09-09 (23:49) — readout validation STOPPED at 4 of 21; preliminary signal is positive
+
+`src/lattrack/validate_readout.py` over the 21 stated traces of the validation set. Readout for
+maths traces: lean(t) = log P(later answer) - log P(earlier answer), each scored as its full token
+sequence after a forcing suffix that opens the answer box, teacher-forced over the given text.
+Null: two numbers appearing in the trace that were never committed as answers, read identically.
+fp16 (measured cached-vs-full error 0.008-0.012, far below a full change of answer).
+
+Completed 4 of 21 (`results/validation/validation_stated.jsonl`). Crossing analysis — does the
+lean start below zero (favouring the earlier answer) and rise above it?
+
+| from -> to | clean | real: first / last | crosses | null: first / last | crosses |
+|---|---|---|---|---|---|
+| 750001 -> -1. | no (malformed) | -2.68 / -13.28 | yes (transient) | 1.06 / -9.04 | no |
+| 1 -> 13 | yes | -4.51 / -0.04 | no | -5.58 / 0.61 | yes |
+| 144 -> 133 | yes | -6.39 / 3.25 | yes | 0.59 / 1.67 | no |
+| 144 -> 133 | yes | -3.86 / 6.32 | yes | 1.12 / 0.41 | no |
+
+Real pair crosses 3/4, null pair 1/4. On the 3 clean traces: real 2/3, null 1/3. All four start
+below zero, so the read grid reaches early enough to see a pre-change state.
+
+**Preliminary reading, n=4, not a result.** The readout is not blind: on two clean traces it moves
+from favouring the earlier answer to favouring the later one, ending +3.25 and +6.32, while the
+null pair does not move. That is the shape a working instrument must produce, and it is the first
+positive evidence in this project that the method can see a real answer change. It is four
+traces; nothing rests on it until the run completes.
+
+Design note found in the data: the third trace's lean already favoured the corrected answer BEFORE
+the written commitment (+4.11 both sides of it). The boxed value marks where the model WRITES the
+new answer, not where it changes its mind, so the before/after contrast understates the effect and
+the crossing analysis (adopted here, user agreed) is the right primary. Where the internal
+crossing sits relative to the written commitment is itself worth reporting later.
+
+**Why it stopped: the machine, for the third time today.** After 4 traces the run stalled — 25
+minutes with no new row, process at 6.7% CPU and 10 MB resident (swapped out), physical memory
+103 MB unused, swap 22.5 of 23.5 GB. The remaining 17 traces are 2-14x longer than the four that
+completed (10k-56k characters). Mitigations applied and insufficient: torch.mps.empty_cache()
+every 4 read positions (DynamicCache.crop does not release the allocator), token cap 7000 -> 5000,
+stride 64 -> 96. The workload is forward passes over 3-5k-token contexts with a live KV cache, on
+16 GB shared with a full desktop; it is not viable while the machine is loaded. Resumable by
+question index: rerunning the same command continues from row 5.
