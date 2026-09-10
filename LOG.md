@@ -705,3 +705,47 @@ position 0 and there is no "before" to cross from: at alpha=1 the answer moved o
 while the detector fired on 35%, BELOW the 70% null. Read naively that is "the detector is blind".
 It was the construction that was wrong, not the detector. The sensitivity curve is what exposed
 it — a single yes/no at full strength would have produced a confidently wrong negative.
+
+### RESULT 9: on Huginn the crossing detector is NOT specific — and that quantifies the critique
+
+`src/lattrack/huginn_induced.py`, 29 question pairs, ARC-Easy, K=32, bf16/MPS. Same logic as
+RESULT 8: blend a donor question's recurrent state into the recipient at the LAST prompt position,
+sustained from loop 19 to the end (a single blended loop was fully recovered within the remaining
+loops — 0 of 6 answers moved, `rows_single_loop.jsonl`), sweep alpha, ground truth = did the
+model's own answer letter change.
+
+| alpha | answer changed | = donor's answer | fires when it moved | when it did not | null pair |
+|---|---|---|---|---|---|
+| 0.0 | 0.000 | 0.000 | — | **0.345 [0.172, 0.517]** (n=29) | 0.379 |
+| 0.5 | 0.621 | 0.483 | 0.722 (n=18) | 0.545 (n=11) | 0.414 |
+| 1.0 | 0.793 | 0.621 | 0.783 [0.609, 0.913] (n=23) | 0.833 (n=6) | 0.379 |
+
+The induction works: at full strength the answer changes on 79% of pairs and lands on the donor's
+answer on 62%. **The detector does not discriminate.** When the answer moved it fires on 78%;
+when the same intervention left the answer unchanged it fires on 83%. It responds to perturbation,
+not to answer change. Contrast RESULT 8 on the graph model: 0.630 when moved vs 0.083 when not.
+
+**The number that matters is the top row.** With NO intervention at all, a per-loop leader-change
+detector fires on 34.5% of questions. Over 32 loops with four options, the argmax crosses by
+chance in a third of questions. That is the floor any flip count on this model must clear, and it
+is measured by intervention rather than argued.
+
+Consequences, stated carefully.
+- RESULT 2's Huginn negative CANNOT be backed by a calibrated instrument the way RESULT 1's can.
+  The honest form is: flips on Huginn do not exceed the arbitrary-pair rate, AND the detector is
+  dominated by noise on this model. Both point the same way — no evidence of real backtracking —
+  but the second is a statement about the instrument, not the model.
+- It sharpens the critique of the readout-only genre. Counting argmax changes across recurrent
+  steps is not a measurement on this architecture: a third of questions produce one with nothing
+  happening, and a deliberate answer change is indistinguishable from an inert perturbation.
+- Cui & Ye report backtracking on 32% of instances. Our measured false-positive rate for a
+  leader-change detector with no intervention is 34.5%. Their definition is stricter (>=3
+  consecutive steps each side) so the two are not directly comparable, and we measured THEIR
+  definition at 66-68% (RESULT 2) — but a headline rate sitting at the same order as a measured
+  noise floor is the comparison a reader should be given.
+- Why the two models differ: the graph model has 3-4 steps and two candidates; Huginn has 32
+  loops and four options, so many more chances for a chance crossing, on a trajectory whose
+  init-seed noise (q50 0.12) already equals its margins at flips (q50 0.12, RESULT 2).
+
+Scope: 29 pairs, intervals are wide, one intervention site (last position, loops 19+). A stronger
+intervention at every position would need prompt-length matching and was not run.
