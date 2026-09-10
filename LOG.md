@@ -618,3 +618,44 @@ a documented answer change, the leaning moves and the null does not. The two neg
 therefore carry their intended weight — with the scope stated honestly: validated on a 1.5B text
 reasoning model with a forcing-suffix readout over numeric answers, not on the latent models
 themselves, where no corpus of documented reversals exists to validate against.
+
+### RESULT 7: the losing candidate IS held — but late, and never as a near-equal rival
+
+`src/lattrack/superposition.py`, 418 test graphs, both accepted seeds, both readouts. Answers
+the objection that an argmax cannot see two answers carried at once, so an absence of flips might
+hide a sustained tie. Asked positively, with the matched control the task supplies: in ProsQA the
+decoy is UNREACHABLE like every distractor node, and differs from them only by being named in the
+question. So z(decoy) = standard deviations above the mean of the unreachable non-candidates, and
+z(control) does the same for one unreachable non-candidate drawn per graph (it must sit near zero,
+and it does: +0.02 to +0.12 everywhere).
+
+Final thought position (`last`), by basis and seed:
+
+| | z decoy | z control | z target | both candidates in top 2 | margin, in spreads |
+|---|---|---|---|---|---|
+| embedding, seed0 | +3.11 | +0.09 | +10.00 | 0.598 | +6.43 |
+| embedding, seed1 | +3.40 | +0.02 | +9.26 | 0.725 | +5.88 |
+| jacobian, seed0 | +2.34 | +0.12 | +6.57 | 0.512 | +4.24 |
+| jacobian, seed1 | +1.50 | +0.07 | +5.75 | 0.244 | +4.22 |
+
+Three findings, consistent across bases and seeds.
+
+1. **The decoy is genuinely represented.** It sits 1.5 to 3.4 standard deviations above its own
+reference class while a matched unreachable node sits at zero. Being named as a candidate, not
+reachability, is what elevates it. So the model is not simply ignoring the answer it does not give.
+2. **It is not a near-tie.** When both candidates are up, the winner leads by 4.2 to 6.4 spreads.
+The two are co-present, not competing on equal terms.
+3. **It happens late.** At the earliest positions z(decoy) is 0.0 to 1.2 and both candidates are
+in the top two in 0-7% of graphs; at the final thought that reaches 24-73%. Across all positions
+both are top-two only 9-24% of the time, and in NO graph (0.000 in all four runs) at every position.
+
+**This closes the superposition objection with a positive account rather than an absence.** The
+reason there are no flips is not that a tie is hidden from an argmax. It is that for most of the
+computation there is no second candidate to flip to — the decoy is not elevated at all — and by
+the time it appears, the winner is already several standard deviations clear. A flip needs two
+candidates, present together, and close; on this substrate those three conditions never coincide.
+It also matches RRR's own finding that identity is bound late, now measured on the losing side.
+
+Scope: this is the 2-layer graph model. It says nothing about Huginn, where no equivalent matched
+control exists (the four ARC options are all "named candidates"; there is no class of nodes that
+differ only by not being named).
