@@ -846,3 +846,59 @@ after (Huginn); in both, the margin keeps growing after the last change. The fou
 ~0.39 is two different distributions averaging to similar numbers. "Difficulty does not move it" was
 tested on one narrow axis. The positive frame that survives is build -> bind -> sharpen (with RESULT
 7), stated without a number. Do not lead with 0.39.
+
+#### 2026-09-10 — K sweep launched (Huginn, ARC-Easy)
+
+Same 50 ARC-Easy questions (QUESTION_SEED 20260908), base condition only, chat_prefill, bf16, MPS,
+K=16 then K=64, into `results/huginn_easy_K16/` and `results/huginn_easy_K64/`. Purpose: is anything
+about the last-change point invariant as a LOOP COUNT rather than as a fraction of K (the recurrent
+block cannot see K), and does the early-exit accuracy shape (peak at loop 14 at K=30) hold. Machine
+check before launch: 58% free, compressor 4.0 GB, no large processes; state size does not grow with
+K, so K=64 costs time not memory. Estimate from the median trajectory of the K=30 run (24.9 s, 0.83
+s/loop): ~13 min for K=16, ~46 min for K=64, plus two model loads of ~2 min.
+
+### RESULT 11: the last-change point is a loop count, not a fraction; Huginn converges by ~loop 24
+
+K sweep, `src/lattrack/huginn_lens.py` at K=16 and K=64 into `results/huginn_easy_K16/` and
+`results/huginn_easy_K64/`, compared with the K=30 run on the same 50 ARC-Easy questions by
+`src/lattrack/ksweep.py` (`results/ksweep.md`, `results/ksweep.json`). Base condition, chat_prefill,
+bf16, MPS; 12.7 s and 50.9 s per trajectory; both tripwires 0.0.
+
+**The three runs are one trajectory.** K=16 and K=30 are bit-identical prefixes of K=64 (max logit
+difference 0.0 at every loop). The recurrence does not see K, as expected; the sweep is the same
+computation read at three lengths.
+
+| K | last-change loop, mean | median | as a fraction of K-1 | last change after loop 16 | final answer differs from K=64's |
+|---|---|---|---|---|---|
+| 16 | 9.4 [8.5, 10.3] | 9 | 0.624 | 0.00 | 0.14 |
+| 30 | 11.4 [9.9, 13.1] | 10 | 0.394 | 0.20 | 0.06 |
+| 64 | 14.9 [11.1, 19.1] | 10 | 0.236 | 0.22 | 0.00 |
+
+The median last change is loop 9-10 at every K; the fraction runs 0.62 -> 0.39 -> 0.24. RESULT 10's
+0.39 was loop 10 divided by 29. The mean at K=64 is pulled to 14.9 by six questions with a late
+noise flip (last change at loops 38, 42, 60, 62 x2, 24).
+
+**Convergence.** Fraction of questions whose leader changes at a given transition: loops 0-8 0.500,
+8-16 0.113, 16-24 0.043, 24-32 0.013, 32-48 0.029, 48-63 0.013. Mean top-1 minus top-2 margin: 0.27
+(loop 4), 0.35 (8), 0.60 (16), 0.61 (24), 0.64 (32), 0.63 (48), 0.62 (63). The answer forms over
+loops ~4-16, the margin stops growing by ~loop 16-24, and the remaining 40 loops change almost
+nothing (1-3% of questions per transition, the residual noise of RESULT 9). Answers at loop 24 vs 63
+differ on 2/50. This is the convergent recurrence Geiping et al. designed and describe (their
+adaptive-exit criterion; our "exploration end, KL <= 0.01 for 3 steps" median loop 11); it is
+consistent with their account, not new. It does settle the earlier question: on this task, latent
+computation past ~loop 24 does nothing measurable to the answer or its margin. Note this revises the
+RESULT 10 addendum's "margin keeps growing after the last change": it grows from the last change
+(~loop 10) to ~loop 16-24, then plateaus.
+
+**Accuracy by loop (K=64 trajectory).** 0.34 (loop 4), 0.58 (8), 0.62 (12), 0.64 (14), 0.66 (13, the
+best loop), 0.60 (16), 0.54 (20), 0.48 (24), 0.50 (29), 0.54 (32), 0.50 (40), 0.52 (48), 0.52 (63).
+Peak 0.66 [~0.52, 0.78] at loop 13, converged value 0.52 [0.38, 0.66]: 33 vs 26 questions right,
+intervals overlap, n=50, bf16. The decline happens between loops 14 and 24 and then stops; it does
+not continue with more loops. An observation to test at n=200 with the fp32 readout, not a claim.
+If it holds, it is the one thing here that is not in Geiping et al.: the converged latent answer is
+worse than the mid-formation one on this task.
+
+**What this does to RESULT 10.** The fraction is dead. What remains is: Huginn forms its answer in
+loops ~4-16 (a loop count), converges by ~24, and later loops are inert; the graph model sets its
+leader at a latent step, confirms it at A, and triples the margin in between. "Build -> bind ->
+sharpen -> stop" is the description; there is no constant and no deliberation.

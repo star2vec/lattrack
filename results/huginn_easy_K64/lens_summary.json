@@ -1,0 +1,408 @@
+{
+ "schema": "huginn-lens-v1",
+ "n_questions": 50,
+ "K": 64,
+ "accuracy_base": {
+  "point": 0.52,
+  "lo": 0.38,
+  "hi": 0.66,
+  "n": 50
+ },
+ "readout_position_check": {
+  "letter_mass_last_median": 0.8625500798225403,
+  "letter_mass_step1_median": 0.0010484757949598134,
+  "argmax_is_letter_last": {
+   "point": 1.0,
+   "lo": 1.0,
+   "hi": 1.0,
+   "n": 50
+  },
+  "argmax_is_letter_by_step": [
+   0.0,
+   0.0,
+   0.02,
+   0.12,
+   0.94,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ]
+ },
+ "accuracy_perm": null,
+ "questions_with_any_leader_change": {
+  "point": 1.0,
+  "lo": 1.0,
+  "hi": 1.0,
+  "n": 50
+ },
+ "mean_leader_changes_per_question": {
+  "point": 6.0,
+  "lo": 5.06,
+  "hi": 7.1,
+  "n": 50
+ },
+ "cui_ye_backtracking_rate": {
+  "point": 0.68,
+  "lo": 0.54,
+  "hi": 0.8,
+  "n": 50
+ },
+ "accuracy_on_backtracking_questions": {
+  "point": 0.47058823529411764,
+  "lo": 0.29411764705882354,
+  "hi": 0.6470588235294118,
+  "n": 34
+ },
+ "accuracy_on_other_questions": {
+  "point": 0.625,
+  "lo": 0.375,
+  "hi": 0.875,
+  "n": 16
+ },
+ "crossing_by_step_bin": {
+  "steps 1\u21924": {
+   "real_pair_any_crossing": {
+    "point": 0.52,
+    "lo": 0.38,
+    "hi": 0.66,
+    "n": 50
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 0.6333333333333333,
+    "lo": 0.5733333333333333,
+    "hi": 0.6999999999999998,
+    "n": 50
+   }
+  },
+  "steps 4\u21928": {
+   "real_pair_any_crossing": {
+    "point": 0.86,
+    "lo": 0.76,
+    "hi": 0.94,
+    "n": 50
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 0.8399999999999999,
+    "lo": 0.78,
+    "hi": 0.8999999999999999,
+    "n": 50
+   }
+  },
+  "steps 8\u219216": {
+   "real_pair_any_crossing": {
+    "point": 0.52,
+    "lo": 0.38,
+    "hi": 0.66,
+    "n": 50
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 0.4133333333333333,
+    "lo": 0.33333333333333326,
+    "hi": 0.5,
+    "n": 50
+   }
+  },
+  "steps 16\u219264": {
+   "real_pair_any_crossing": {
+    "point": 0.2,
+    "lo": 0.1,
+    "hi": 0.32,
+    "n": 50
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 0.14666666666666667,
+    "lo": 0.08666666666666666,
+    "hi": 0.21333333333333332,
+    "n": 50
+   }
+  }
+ },
+ "crossing_per_step": {
+  "real": [
+   0.3,
+   0.14,
+   0.3,
+   0.46,
+   0.4,
+   0.3,
+   0.32,
+   0.16,
+   0.14,
+   0.14,
+   0.02,
+   0.12,
+   0.08,
+   0.02,
+   0.1,
+   0.06,
+   0.08,
+   0.02,
+   0.04,
+   0.04,
+   0.0,
+   0.04,
+   0.02,
+   0.02,
+   0.02,
+   0.02,
+   0.02,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.02,
+   0.02,
+   0.04,
+   0.04,
+   0.02,
+   0.04,
+   0.08,
+   0.04,
+   0.02,
+   0.02,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.02,
+   0.0,
+   0.0,
+   0.02,
+   0.0,
+   0.02,
+   0.02,
+   0.0,
+   0.02,
+   0.04,
+   0.0
+  ],
+  "distractor": [
+   0.3,
+   0.1933,
+   0.3467,
+   0.4533,
+   0.3933,
+   0.2667,
+   0.2933,
+   0.1333,
+   0.1867,
+   0.0533,
+   0.0467,
+   0.0467,
+   0.0533,
+   0.0667,
+   0.0333,
+   0.0533,
+   0.0333,
+   0.02,
+   0.0333,
+   0.0067,
+   0.0133,
+   0.0133,
+   0.02,
+   0.0067,
+   0.0,
+   0.0067,
+   0.0067,
+   0.0067,
+   0.0133,
+   0.0067,
+   0.0333,
+   0.02,
+   0.0133,
+   0.02,
+   0.02,
+   0.0,
+   0.0067,
+   0.0133,
+   0.0133,
+   0.0067,
+   0.0067,
+   0.02,
+   0.0067,
+   0.0133,
+   0.0133,
+   0.0133,
+   0.0267,
+   0.02,
+   0.0267,
+   0.0067,
+   0.0,
+   0.0133,
+   0.0267,
+   0.0067,
+   0.0133,
+   0.0067,
+   0.0133,
+   0.0067,
+   0.0133,
+   0.0267,
+   0.02,
+   0.0067,
+   0.0133
+  ]
+ },
+ "letter_onset_step": {
+  "median": 5.0,
+  "q90": 5.0,
+  "never": 0
+ },
+ "answering_phase": {
+  "definition": "transitions where a letter is the model's next token at both steps",
+  "real_pair_any_crossing": {
+   "point": 0.88,
+   "lo": 0.78,
+   "hi": 0.96,
+   "n": 50
+  },
+  "distractor_pairs_any_crossing": {
+   "point": 0.8666666666666666,
+   "lo": 0.8066666666666665,
+   "hi": 0.9266666666666665,
+   "n": 50
+  },
+  "mean_leader_changes": {
+   "point": 4.08,
+   "lo": 3.159500000000001,
+   "hi": 5.2,
+   "n": 50
+  },
+  "questions_with_leader_change": {
+   "point": 0.98,
+   "lo": 0.94,
+   "hi": 1.0,
+   "n": 50
+  },
+  "margin_at_changes": {
+   "before": {
+    "q10": 5.7220458984375e-06,
+    "q50": 0.12498664855957031,
+    "q90": 0.37496299743652345
+   },
+   "after": {
+    "q10": 3.814697265625e-06,
+    "q50": 0.12498950958251953,
+    "q90": 0.3749603271484375
+   },
+   "n": 204
+  }
+ },
+ "last_leader_change_step": {
+  "median": 10.0,
+  "q90": 38.0,
+  "n": 50
+ },
+ "margin_at_changes": {
+  "before": {
+   "q10": 9.5367431640625e-06,
+   "q50": 0.12502098083496094,
+   "q90": 1.2131124973297123
+  },
+  "after": {
+   "q10": 5.7220458984375e-06,
+   "q50": 0.1250438690185547,
+   "q90": 1.3156325340271011
+  },
+  "n": 300
+ },
+ "init_seed_noise": {
+  "abs_gap_change": null,
+  "leader_agreement_per_step": null,
+  "change_set_identical": null,
+  "n_pairs": 0
+ },
+ "perm_cell": {
+  "same_correctness": null,
+  "same_number_of_changes": null
+ },
+ "exploration_end_step": {
+  "median": 11.0,
+  "never": 0
+ },
+ "conditions": {
+  "model": "tomg-group-umd/huginn-0125",
+  "device": "mps",
+  "dtype": "bfloat16",
+  "K": 64,
+  "dataset": "allenai/ai2_arc arc_easy test, four-option questions, seeded shuffle",
+  "question_seed": 20260908,
+  "prompt_style": "chat_prefill",
+  "prompt": "question + lettered options; see prompt_ids() for the three styles",
+  "readout": "predict_from_latents at each recurrent step, last position, logits of ' A'..' D'",
+  "tripwires": {
+   "determinism_max_abs_diff": 0.0,
+   "lens_vs_forward_max_abs_diff": 0.0,
+   "prompt_tokens": 66,
+   "first_trajectory_seconds": 45.1
+  },
+  "model_load_seconds": 123.0,
+  "seconds_per_trajectory": 50.9,
+  "rows_new": 50,
+  "rows_total": 50,
+  "torch": "2.5.1",
+  "date": "2026-09-10"
+ }
+}

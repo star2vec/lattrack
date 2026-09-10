@@ -88,6 +88,8 @@ def huginn(d, label):
         f"tol {t}: {np.mean([robust_commit(s, t) > 0 for s in S]):.2f}" for t in TOLS)
         + f"; Cui-Ye event rate as logged {np.mean([r['derived']['cui_ye_event'] for r in rows]):.2f}.")
     for m in (8, 16):
+        if m >= K - 1:
+            continue
         late = [s for s in S if s[m].argmax() != s[-1].argmax()]
         margs = sorted(float(np.sort(s[m])[-1] - np.sort(s[m])[-2]) for s in late)
         say(f"Answer at loop {m} differs from the final answer: {len(late)}/{n}; margins at loop {m}: " + ", ".join(f"{x:.2f}" for x in margs))

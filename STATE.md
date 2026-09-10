@@ -1,4 +1,4 @@
-# State snapshot — 2026-09-10 (updated after the RESULT 10 addendum)
+# State snapshot — 2026-09-10 (updated after RESULT 11)
 
 An index into `LOG.md`, not a second record. `LOG.md` is the chronological account and the only
 place numbers live; this file exists so a new session can pick up without re-reading it. Anything
@@ -31,6 +31,7 @@ candidates and revising.
 | 8 | Induced reversals on the graph model: detector fires 63-73% when the answer moved vs 8-17% when it did not | calibrated on the substrate |
 | 9 | Huginn: detector NOT specific — fires 78% when the answer moved, 83% when it did not, and 34.5% with no intervention at all | quantifies the critique; 29 pairs |
 | 10 | Mean last-change point ~0.39 in all four cells — but the addendum shows the mean hides a spread. Graph: the answer step confirms the last latent's leader on 96-99% of graphs and the margin triples after. Huginn: answer forms over loops ~4-16, sharpens after; 10-16% of answers still move after loop 16 | descriptive, NOT a constant; do not lead with 0.39; bf16 inflates Huginn per-transition counts (event presence and RESULT 9 unaffected) |
+| 11 | K sweep (16/30/64, same 50 ARC-Easy questions, bit-identical prefixes): last change at loop 9-10 at every K, fraction 0.62/0.39/0.24 — RESULT 10's 0.39 was loop 10 / 29. Huginn converges by ~loop 24; loops after are inert (1-3% change per transition, margin flat at ~0.6). Accuracy peaks 0.66 at loop 13, converged 0.52 (n=50, overlapping) | settles fraction-vs-loop; convergence is Geiping et al.'s design, not new; the mid-formation accuracy peak is the one lead, untested at n |
 
 Asymmetry to preserve in any write-up: RESULT 1 carries a calibrated instrument (RESULT 8);
 RESULT 2 does not (RESULT 9). Both point the same way; only one is instrument-backed.
@@ -42,13 +43,13 @@ the 0.39 is not a constant. Graph model: last change spread over latent transiti
 quiet (96-99% confirm), margin x3 after. Huginn: unformed (~loops 0-8) -> forming (8-16) ->
 sharpening; half the answers differ from final at loop 8, 10-16% at loop 16; 65-70% of individual
 transitions are within one bf16 ulp. Early-exit accuracy on ARC-Easy peaks at loop 14 (0.64) and
-ends at 0.50 (n=50, intervals overlap). Positive frame that survives: build -> bind -> sharpen.
+ends at 0.50 (n=50, intervals overlap). Positive frame that survives: build -> bind -> sharpen -> stop (RESULT 11).
 
 Candidate runs, all on this Mac, none started (user to choose):
 - fp32 option readout rerun of the Huginn lens, base condition, both datasets (~32 min each):
   hygiene for any published per-transition count.
-- K sweep, ARC-Easy, same 50 questions at K=16 and K=64 (~16 + ~63 min): is anything invariant
-  in loops rather than as a fraction; also settles the early-exit shape.
+- K sweep: DONE (RESULT 11). Loop count, not fraction; converged by ~loop 24; accuracy peak at
+  loop 13 (0.66) vs converged 0.52, n=50 — the one lead, needs n=200 + fp32 readout.
 - CODI (`zen-E/CODI-gpt2`, official, MIT, 406 MB, model class to vendor) for the third architecture
   family, if the paper goes ahead. Expect a phase description, not a 0.39.
 

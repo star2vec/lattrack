@@ -1,0 +1,264 @@
+{
+ "schema": "huginn-lens-v1",
+ "n_questions": 50,
+ "K": 16,
+ "accuracy_base": {
+  "point": 0.58,
+  "lo": 0.44,
+  "hi": 0.7,
+  "n": 50
+ },
+ "readout_position_check": {
+  "letter_mass_last_median": 0.885425478219986,
+  "letter_mass_step1_median": 0.0010484757949598134,
+  "argmax_is_letter_last": {
+   "point": 1.0,
+   "lo": 1.0,
+   "hi": 1.0,
+   "n": 50
+  },
+  "argmax_is_letter_by_step": [
+   0.0,
+   0.0,
+   0.02,
+   0.12,
+   0.94,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ]
+ },
+ "accuracy_perm": null,
+ "questions_with_any_leader_change": {
+  "point": 1.0,
+  "lo": 1.0,
+  "hi": 1.0,
+  "n": 50
+ },
+ "mean_leader_changes_per_question": {
+  "point": 4.84,
+  "lo": 4.4,
+  "hi": 5.3,
+  "n": 50
+ },
+ "cui_ye_backtracking_rate": {
+  "point": 0.56,
+  "lo": 0.42,
+  "hi": 0.7,
+  "n": 50
+ },
+ "accuracy_on_backtracking_questions": {
+  "point": 0.6428571428571429,
+  "lo": 0.4642857142857143,
+  "hi": 0.8214285714285714,
+  "n": 28
+ },
+ "accuracy_on_other_questions": {
+  "point": 0.5,
+  "lo": 0.2727272727272727,
+  "hi": 0.7272727272727273,
+  "n": 22
+ },
+ "crossing_by_step_bin": {
+  "steps 1\u21924": {
+   "real_pair_any_crossing": {
+    "point": 0.58,
+    "lo": 0.44,
+    "hi": 0.72,
+    "n": 50
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 0.6333333333333333,
+    "lo": 0.5733333333333333,
+    "hi": 0.6999999999999998,
+    "n": 50
+   }
+  },
+  "steps 4\u21928": {
+   "real_pair_any_crossing": {
+    "point": 0.86,
+    "lo": 0.76,
+    "hi": 0.94,
+    "n": 50
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 0.8399999999999999,
+    "lo": 0.78,
+    "hi": 0.8999999999999999,
+    "n": 50
+   }
+  },
+  "steps 8\u219216": {
+   "real_pair_any_crossing": {
+    "point": 0.54,
+    "lo": 0.4,
+    "hi": 0.68,
+    "n": 50
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 0.4133333333333333,
+    "lo": 0.33333333333333326,
+    "hi": 0.5,
+    "n": 50
+   }
+  },
+  "steps 16\u219216": {
+   "real_pair_any_crossing": {
+    "point": 0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "n": 50
+   },
+   "distractor_pairs_any_crossing": {
+    "point": 0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "n": 50
+   }
+  }
+ },
+ "crossing_per_step": {
+  "real": [
+   0.36,
+   0.16,
+   0.3,
+   0.46,
+   0.4,
+   0.36,
+   0.32,
+   0.16,
+   0.14,
+   0.16,
+   0.02,
+   0.12,
+   0.08,
+   0.02,
+   0.1
+  ],
+  "distractor": [
+   0.3,
+   0.1933,
+   0.3467,
+   0.4533,
+   0.3933,
+   0.2667,
+   0.2933,
+   0.1333,
+   0.1867,
+   0.0533,
+   0.0467,
+   0.0467,
+   0.0533,
+   0.0667,
+   0.0333
+  ]
+ },
+ "letter_onset_step": {
+  "median": 5.0,
+  "q90": 5.0,
+  "never": 0
+ },
+ "answering_phase": {
+  "definition": "transitions where a letter is the model's next token at both steps",
+  "real_pair_any_crossing": {
+   "point": 0.9,
+   "lo": 0.82,
+   "hi": 0.98,
+   "n": 50
+  },
+  "distractor_pairs_any_crossing": {
+   "point": 0.8533333333333333,
+   "lo": 0.7933333333333333,
+   "hi": 0.9133333333333333,
+   "n": 50
+  },
+  "mean_leader_changes": {
+   "point": 2.92,
+   "lo": 2.56,
+   "hi": 3.300499999999997,
+   "n": 50
+  },
+  "questions_with_leader_change": {
+   "point": 0.98,
+   "lo": 0.94,
+   "hi": 1.0,
+   "n": 50
+  },
+  "margin_at_changes": {
+   "before": {
+    "q10": 1.621246337890625e-05,
+    "q50": 0.1250019073486328,
+    "q90": 0.37500858306884766
+   },
+   "after": {
+    "q10": 1.430511474609375e-05,
+    "q50": 0.1250162124633789,
+    "q90": 0.3750133514404297
+   },
+   "n": 146
+  }
+ },
+ "last_leader_change_step": {
+  "median": 9.0,
+  "q90": 15.0,
+  "n": 50
+ },
+ "margin_at_changes": {
+  "before": {
+   "q10": 3.452301025390625e-05,
+   "q50": 0.24994754791259766,
+   "q90": 1.6015706062316906
+  },
+  "after": {
+   "q10": 3.080368041992188e-05,
+   "q50": 0.2499523162841797,
+   "q90": 1.857336616516114
+  },
+  "n": 242
+ },
+ "init_seed_noise": {
+  "abs_gap_change": null,
+  "leader_agreement_per_step": null,
+  "change_set_identical": null,
+  "n_pairs": 0
+ },
+ "perm_cell": {
+  "same_correctness": null,
+  "same_number_of_changes": null
+ },
+ "exploration_end_step": {
+  "median": 11.0,
+  "never": 6
+ },
+ "conditions": {
+  "model": "tomg-group-umd/huginn-0125",
+  "device": "mps",
+  "dtype": "bfloat16",
+  "K": 16,
+  "dataset": "allenai/ai2_arc arc_easy test, four-option questions, seeded shuffle",
+  "question_seed": 20260908,
+  "prompt_style": "chat_prefill",
+  "prompt": "question + lettered options; see prompt_ids() for the three styles",
+  "readout": "predict_from_latents at each recurrent step, last position, logits of ' A'..' D'",
+  "tripwires": {
+   "determinism_max_abs_diff": 0.0,
+   "lens_vs_forward_max_abs_diff": 0.0,
+   "prompt_tokens": 66,
+   "first_trajectory_seconds": 13.3
+  },
+  "model_load_seconds": 120.5,
+  "seconds_per_trajectory": 12.7,
+  "rows_new": 50,
+  "rows_total": 50,
+  "torch": "2.5.1",
+  "date": "2026-09-10"
+ }
+}
