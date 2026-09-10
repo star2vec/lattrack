@@ -133,14 +133,39 @@ def prompt_ids(tok, text, device, style=None):
     return torch.tensor([tok(s, add_special_tokens=False)["input_ids"]], device=device)
 
 
+class LetterHead:
+    """fp32 option logits from the hidden state entering lm_head.
+
+    The model's own path is bf16 end to end and one bf16 ulp at |logit|~16 is 0.125; in
+    the bf16 runs 65-70% of leader changes had a margin under one ulp on one side (RESULT
+    10 addendum), so per-transition counts were inflated by quantisation ties. A forward
+    pre-hook captures lm_head's input (after the second ln_f) and dots it with the eight
+    letter rows in fp32: 8 x 5280 weights, negligible memory. This removes the quantisation
+    of the logits themselves; the hidden state feeding them is still bf16."""
+
+    def __init__(self, model, letter_ids):
+        self.W = model.lm_head.weight[letter_ids.flatten()].detach().float()   # (8, d)
+        self.shape = tuple(letter_ids.shape)
+        self.h = None
+        self.handle = model.lm_head.register_forward_pre_hook(self._grab)
+
+    def _grab(self, module, inputs):
+        self.h = inputs[0][0, -1].detach()
+
+    def letters(self):
+        return (self.h.float() @ self.W.T).view(self.shape)                    # (2, 4) fp32
+
+
 @torch.no_grad()
-def lens_trajectory(model, ids, letter_ids, K, init_seed):
+def lens_trajectory(model, ids, letter_ids, K, init_seed, head=None):
     """Per-step logits over the four letters at the last position, plus the full
-    logit row at the last step (for the tripwire)."""
+    logit row at the last step (for the tripwire). With `head` (LetterHead) the option
+    logits come from the fp32 letter readout and the model's own bf16 ones are returned
+    alongside as `steps_bf16`; without it, steps are the bf16 ones and steps_bf16 is None."""
     torch.manual_seed(init_seed)
     input_embeds, block_idx = model.embed_inputs(ids)
     x = model.initialize_state(input_embeds)
-    steps, raw, mass, argmax_letter = [], [], [], []
+    steps, steps_bf16, raw, mass, argmax_letter = [], [], [], [], []
     letter_set = set(letter_ids.flatten().tolist())
     last_row = None
     for k in range(K):
@@ -148,13 +173,16 @@ def lens_trajectory(model, ids, letter_ids, K, init_seed):
         out = model.predict_from_latents(x)
         row = out.logits[0, -1].float()
         both = row[letter_ids]                                   # (2, 4): "A".."D" and " A".." D"
+        steps_bf16.append(torch.logsumexp(both, dim=0).tolist())
+        if head is not None:
+            both = head.letters()
         steps.append(torch.logsumexp(both, dim=0).tolist())     # combined option logit
         raw.append(both.tolist())
         pv = torch.softmax(row, -1)
         mass.append(float(pv[letter_ids].sum()))                 # vocab mass on the eight letter tokens
         argmax_letter.append(int(row.argmax()) in letter_set)    # is a letter the model's next token
         last_row = row
-    return steps, last_row, raw, mass, argmax_letter
+    return steps, last_row, raw, mass, argmax_letter, (steps_bf16 if head is not None else None)
 
 
 @torch.no_grad()
@@ -411,6 +439,8 @@ def main():
     p.add_argument("--prompt-style", default="chat", choices=("chat", "chat_prefill", "plain"))
     p.add_argument("--summarize-only", action="store_true", help="recompute the summary from the rows; no model")
     p.add_argument("--dataset", default="arc_challenge", choices=("arc_challenge", "arc_easy", "gsm8k"))
+    p.add_argument("--readout", default="bf16", choices=("bf16", "fp32-letters"),
+                   help="bf16: the model's own logits; fp32-letters: LetterHead, lm_head input x letter rows in fp32")
     args = p.parse_args()
     global PROMPT_STYLE, DATASET
     PROMPT_STYLE = args.prompt_style
@@ -451,20 +481,24 @@ def main():
     letter_ids = torch.tensor([[x[0] for x in nospace], [x[0] for x in space]], device=args.device)  # (2, 4)
     qs = load_questions(args.n)
     wanted = args.conditions.split(",")
+    head = LetterHead(model, letter_ids) if args.readout == "fp32-letters" else None
 
     # tripwires on the first question
     ids0 = prompt_ids(tok, render(qs[0], qs[0]["choices"]["text"]), args.device)
     t1 = time.time()
-    s_a, row_a, *_ = lens_trajectory(model, ids0, letter_ids, args.K, 0)
+    s_a, row_a, *_, sb_a = lens_trajectory(model, ids0, letter_ids, args.K, 0, head)
     first_traj_s = time.time() - t1
-    s_b, row_b, *_ = lens_trajectory(model, ids0, letter_ids, args.K, 0)
+    s_b, row_b, *_ = lens_trajectory(model, ids0, letter_ids, args.K, 0, head)
     det = float((row_a - row_b).abs().max())
     fwd = model_forward_last(model, ids0, args.K, 0)
     consist = float((row_a - fwd).abs().max())
     trip = {"determinism_max_abs_diff": det, "lens_vs_forward_max_abs_diff": consist,
             "prompt_tokens": int(ids0.shape[1]), "first_trajectory_seconds": round(first_traj_s, 1)}
+    if head is not None:
+        # the fp32 letter logits must sit within bf16 rounding of the model's own
+        trip["fp32_vs_bf16_letters_max_abs_diff"] = float(np.abs(np.array(s_a) - np.array(sb_a)).max())
     print("tripwires:", trip, flush=True)
-    if det > 0 or consist > 1e-3:
+    if det > 0 or consist > 1e-3 or trip.get("fp32_vs_bf16_letters_max_abs_diff", 0) > 0.25:
         sys.exit("[stop] tripwire failed")
 
     n_new, t2 = 0, time.time()
@@ -474,11 +508,13 @@ def main():
                 if name not in wanted or (q["id"], name) in existing:
                     continue
                 ids = prompt_ids(tok, render(q, opts), args.device)
-                steps, _, raw, mass, aml = lens_trajectory(model, ids, letter_ids, args.K, seed)
+                steps, _, raw, mass, aml, sb = lens_trajectory(model, ids, letter_ids, args.K, seed, head)
                 r = {"schema": SCHEMA, "qid": q["id"], "qi": qi, "condition": name, "init_seed": seed,
                      "correct_letter": correct, "n_tokens": int(ids.shape[1]), "steps": steps,
                      "steps_raw_nospace_space": raw, "letter_mass": mass, "argmax_is_letter": aml,
                      "derived": derive(steps, LETTERS.index(correct))}
+                if sb is not None:
+                    r["readout"], r["steps_bf16"] = args.readout, sb
                 f.write(json.dumps(r) + "\n")
                 f.flush()
                 existing[(q["id"], name)] = r
@@ -493,7 +529,9 @@ def main():
                              "dataset": f"allenai/ai2_arc {args.dataset} test, four-option questions, seeded shuffle",
                              "question_seed": QUESTION_SEED, "prompt_style": args.prompt_style,
                              "prompt": "question + lettered options; see prompt_ids() for the three styles",
-                             "readout": "predict_from_latents at each recurrent step, last position, logits of ' A'..' D'",
+                             "readout": "predict_from_latents at each recurrent step, last position, logits of ' A'..' D'"
+                                        + ("; option logits from LetterHead: lm_head input x letter rows in fp32" if head is not None else ""),
+                             "readout_mode": args.readout,
                              "tripwires": trip, "model_load_seconds": round(load_s, 1),
                              "seconds_per_trajectory": round(per_traj, 1) if n_new else None,
                              "rows_new": n_new, "rows_total": len(rows), "torch": torch.__version__,

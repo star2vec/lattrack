@@ -902,3 +902,17 @@ worse than the mid-formation one on this task.
 loops ~4-16 (a loop count), converges by ~24, and later loops are inert; the graph model sets its
 leader at a latent step, confirms it at A, and triples the margin in between. "Build -> bind ->
 sharpen -> stop" is the description; there is no constant and no deliberation.
+
+#### 2026-09-10 — fp32 letter readout rerun launched (Huginn, both datasets)
+
+`huginn_lens.py --readout fp32-letters`: a forward pre-hook on `lm_head` captures its input (the
+hidden state after the second `ln_f`, still bf16) and dots it with the eight letter rows of
+`lm_head.weight` in fp32 (`LetterHead`, 8 x 5280 weights). Removes the bf16 quantisation of the
+option logits themselves (one ulp = 0.125 at |logit|~16), which the RESULT 10 addendum found on one
+side of 65-70% of leader changes. The model's own bf16 logits are kept per row as `steps_bf16` and
+must equal the earlier runs' `steps` exactly (same seed, same prompt); new tripwire: fp32 vs bf16
+letter logits within 0.25 on the first question. Same 50 questions per dataset, base condition,
+chat_prefill, MPS, K=32 (ARC-Challenge) into `results/huginn_fp32/` and K=30 (ARC-Easy) into
+`results/huginn_easy_fp32/`. Estimate from median trajectories of the bf16 runs: ~32 + ~21 min plus
+two ~2 min loads. Purpose: clean per-transition counts before any Huginn number is published;
+recompute RESULT 2's event rate, RESULT 10's distribution and RESULT 11's late movers on fp32 steps.
