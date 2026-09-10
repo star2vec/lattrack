@@ -1,4 +1,4 @@
-# State snapshot — 2026-09-10 (updated after RESULT 10)
+# State snapshot — 2026-09-10 (updated after the RESULT 10 addendum)
 
 An index into `LOG.md`, not a second record. `LOG.md` is the chronological account and the only
 place numbers live; this file exists so a new session can pick up without re-reading it. Anything
@@ -14,8 +14,8 @@ these models, because the phenomenon it presupposes is not there. The brief name
 "only in the decoder" as the thing to rule out first; we ruled it in.
 
 The positive claim the evidence supports: **latent steps are not deliberation between answers.**
-These models compute a structure and bind an answer late, rather than weighing candidates and
-revising.
+These models compute a structure, bind an answer, and then sharpen it, rather than weighing
+candidates and revising.
 
 ## Results (all in LOG.md with numbers and conditions)
 
@@ -30,28 +30,30 @@ revising.
 | 7 | The losing candidate IS held, but only late and never near-tied (z +1.5 to +3.4 vs control ~0; winner ahead by 4-6 spreads) | closes the superposition objection, positive |
 | 8 | Induced reversals on the graph model: detector fires 63-73% when the answer moved vs 8-17% when it did not | calibrated on the substrate |
 | 9 | Huginn: detector NOT specific — fires 78% when the answer moved, 83% when it did not, and 34.5% with no intervention at all | quantifies the critique; 29 pairs |
-| 10 | Commitment point ~0.39 of the trajectory on all four model/task combinations; Huginn 0.392 (hard) vs 0.394 (easy) despite a 12-point accuracy gap | positive lead; but Huginn's changes are largely noise per RESULT 9, so its number partly measures when noise settles |
+| 10 | Mean last-change point ~0.39 in all four cells — but the addendum shows the mean hides a spread. Graph: the answer step confirms the last latent's leader on 96-99% of graphs and the margin triples after. Huginn: answer forms over loops ~4-16, sharpens after; 10-16% of answers still move after loop 16 | descriptive, NOT a constant; do not lead with 0.39; bf16 inflates Huginn per-transition counts (event presence and RESULT 9 unaffected) |
 
 Asymmetry to preserve in any write-up: RESULT 1 carries a calibrated instrument (RESULT 8);
 RESULT 2 does not (RESULT 9). Both point the same way; only one is instrument-backed.
 
 ## Next
 
-Commitment-point analysis is DONE (RESULT 10, `src/lattrack/commitment.py`): the answer is fixed
-at ~0.39 of the trajectory and task difficulty does not move it. That is the positive finding to
-lead with — what latent steps DO, not what they fail to do — with the RESULT 9 caveat attached.
-Loose thread, too thin to claim: on ARC-Easy the questions Huginn gets wrong commit later
-(0.463 vs 0.326, n=25 each, intervals barely touching).
+RESULT 10 addendum (2026-09-10, `src/lattrack/commitment_dist.py`, `results/commitment_dist.md`):
+the 0.39 is not a constant. Graph model: last change spread over latent transitions, answer step
+quiet (96-99% confirm), margin x3 after. Huginn: unformed (~loops 0-8) -> forming (8-16) ->
+sharpening; half the answers differ from final at loop 8, 10-16% at loop 16; 65-70% of individual
+transitions are within one bf16 ulp. Early-exit accuracy on ARC-Easy peaks at loop 14 (0.64) and
+ends at 0.50 (n=50, intervals overlap). Positive frame that survives: build -> bind -> sharpen.
 
-Agreed next, if the paper is going ahead: add **CODI** (`zen-E/CODI-gpt2`, official, MIT, 406 MB, needs
-its repo's model class vendored). That gives all three architecture families — feed-back (CODI),
-recurrent-depth (Huginn), from-scratch two-layer (ours) — which is the difference between "two
-models" and a paper. Optional after that: widen Huginn from 50 to 200 questions; finish the text
-validation (179 traces remain); COCONUT ProsQA third-party checkpoints exist if wanted.
+Candidate runs, all on this Mac, none started (user to choose):
+- fp32 option readout rerun of the Huginn lens, base condition, both datasets (~32 min each):
+  hygiene for any published per-transition count.
+- K sweep, ARC-Easy, same 50 questions at K=16 and K=64 (~16 + ~63 min): is anything invariant
+  in loops rather than as a fraction; also settles the early-exit shape.
+- CODI (`zen-E/CODI-gpt2`, official, MIT, 406 MB, model class to vendor) for the third architecture
+  family, if the paper goes ahead. Expect a phase description, not a 0.39.
 
-Venue thinking: strong workshop plus arXiv, BlackboxNLP first, ICLR 2027 interpretability
-workshop in parallel, short Alignment Forum post alongside. Not a main conference; what would
-change that is a model that demonstrably changes its mind.
+Venue thinking unchanged: strong workshop plus arXiv, BlackboxNLP first, ICLR 2027 interpretability
+workshop in parallel, short Alignment Forum post alongside. Open decision: post now vs CODI + paper.
 
 ## Where things are
 

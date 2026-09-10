@@ -784,3 +784,65 @@ What it adds: a positive, quantitative statement to lead with. These models fix 
 roughly fixed point about two fifths of the way through, and making the task harder does not
 give them a longer deliberation — consistent with RESULT 7 (the losing candidate is never a live
 competitor) and with the brief's own prior finding that identity is bound late.
+
+### RESULT 10 addendum (2026-09-10): the mean hides a spread; do not read 0.39 as a constant
+
+`src/lattrack/commitment_dist.py`, no new runs; every number below is in `results/commitment_dist.md`.
+Prompted by the question whether the ~0.39 agreement across four cells is a finding to lead with.
+Looked at what the mean is a mean of.
+
+**Graph model: the last change is spread over the latent transitions, and the answer step is quiet.**
+
+| | never | root->l0 | l0->l1 | l1->l2 | ->A |
+|---|---|---|---|---|---|
+| seed0 K=3 (n=202) | 0.421 | 0.193 | 0.361 | — | 0.025 |
+| seed0 K=4 (n=217) | 0.263 | 0.138 | 0.300 | 0.258 | 0.041 |
+| seed1 K=3 | 0.312 | 0.262 | 0.411 | — | 0.015 |
+| seed1 K=4 | 0.180 | 0.184 | 0.309 | 0.318 | 0.009 |
+
+There is no fixed point; the 0.376/0.413 is the average of that spread, and the K=3 vs K=4 means
+differ because the number of reachable positions differs. The invariant is the last column: the [A]
+readout confirms the last latent's leader on 96-99% of graphs. Among graphs committed before A,
+|gap| goes from 2.3-3.4 at the commitment position to 8.3-8.9 at A, growing on 92-96% of graphs.
+The steps after the leader is set roughly triple the margin. They are not idle.
+
+**Huginn: three phases, spread widely across questions, not a decision point.** The last-change loop
+runs from 1 to 31 (mode 7-8; mean 12). The letter first becomes the argmax at loop 3.9 on average.
+Half the questions still show a different argmax at loop 8 than at the end (25/50 ARC-C, 24/50
+ARC-E); 5/50 and 8/50 still differ at loop 16. Margin at the last change 0.15-0.18 logits, at the
+last loop 0.64-0.68, growing on 80-86%. Asking instead for the last loop at which a DIFFERENT letter
+led by more than a tolerance moves the point earlier as the tolerance rises (tol 0.13: loop 8.5 /
+8.8; 0.3: 6.6 / 7.3; 0.5: 4.8 / 4.2): the early changes are between near-tied options. Reading:
+option distribution near-uniform through ~loop 8, separating over loops 8-16, sharpening after.
+"Commitment at 0.39" is the average position of the boundary between an unformed and a formed
+answer. That is a description of convergence, which Geiping et al. already characterise per token,
+not evidence of deliberation ending.
+
+**Precision caveat, new.** The Huginn runs were bfloat16 (`results/huginn/lens_summary.json`). One
+ulp at |logit|~16 is 0.125. 65-70% of individual leader-change transitions (195/277 ARC-C, 173/265
+ARC-E) have a margin below one ulp on one side, so per-transition change COUNTS (n_changes 5.5 per
+question; any Cui-Ye-style count of changes) are inflated by quantisation ties. Event PRESENCE is
+not: in 100% of questions some other letter led by > 0.13 at some loop, and RESULT 9's 11/29
+null-pair crossings at alpha=0 all had the opposite leader ahead by > 0.13 at some loop (0 had an
+end gap within one ulp). RESULT 9 stands as stated. Any published per-transition Huginn count needs
+an fp32 option readout first: cast the state to float32 and run ln_f plus the 8 letter rows of
+lm_head in fp32 (negligible memory); base condition only is ~32 min per dataset at 37.8 s per
+trajectory. Not run.
+
+**Early exit.** Accuracy of the argmax at loop k: ARC-Challenge 0.22 (loop 4) -> 0.38 (16) -> 0.38
+(31), saturating; ARC-Easy 0.34 (4) -> 0.64 [0.52, 0.76] (14) -> 0.50 [0.36, 0.64] (29). The later
+loops move answers, on ARC-Easy net for the worse; n=50 and the intervals overlap, so this is an
+observation to check at larger n, not a claim. Either way "the later steps do nothing" is false:
+margins grow and some answers move.
+
+**Fraction vs loop.** Huginn's recurrent block receives no signal of how many loops it will get, so
+a true invariant can only be a loop count, never a fraction of K; 0.39 would not survive K=64. The
+test is the same 50 questions at K=16 and K=64 (~16 and ~63 min on this Mac, base only). Not run.
+On the graph model K is the problem depth and the invariant is the quiet answer step, not a fraction.
+
+**Revised reading of RESULT 10.** Descriptive, not a constant. The leader is set at a latent step and
+the answer step confirms it (graph); the answer forms over the first third of the loops and sharpens
+after (Huginn); in both, the margin keeps growing after the last change. The four-way agreement at
+~0.39 is two different distributions averaging to similar numbers. "Difficulty does not move it" was
+tested on one narrow axis. The positive frame that survives is build -> bind -> sharpen (with RESULT
+7), stated without a number. Do not lead with 0.39.
