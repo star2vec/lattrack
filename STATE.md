@@ -1,4 +1,4 @@
-# State snapshot — 2026-09-10
+# State snapshot — 2026-09-10 (updated after RESULT 10)
 
 An index into `LOG.md`, not a second record. `LOG.md` is the chronological account and the only
 place numbers live; this file exists so a new session can pick up without re-reading it. Anything
@@ -30,19 +30,20 @@ revising.
 | 7 | The losing candidate IS held, but only late and never near-tied (z +1.5 to +3.4 vs control ~0; winner ahead by 4-6 spreads) | closes the superposition objection, positive |
 | 8 | Induced reversals on the graph model: detector fires 63-73% when the answer moved vs 8-17% when it did not | calibrated on the substrate |
 | 9 | Huginn: detector NOT specific — fires 78% when the answer moved, 83% when it did not, and 34.5% with no intervention at all | quantifies the critique; 29 pairs |
+| 10 | Commitment point ~0.39 of the trajectory on all four model/task combinations; Huginn 0.392 (hard) vs 0.394 (easy) despite a 12-point accuracy gap | positive lead; but Huginn's changes are largely noise per RESULT 9, so its number partly measures when noise settles |
 
 Asymmetry to preserve in any write-up: RESULT 1 carries a calibrated instrument (RESULT 8);
 RESULT 2 does not (RESULT 9). Both point the same way; only one is instrument-backed.
 
-## Next, agreed
+## Next
 
-**Commitment-point analysis** (`src/lattrack/commitment.py`, to be written). For every model and
-question, the last step after which the leader never changes again, as a fraction of the
-trajectory; then whether it moves with task difficulty (ARC-Easy vs ARC-Challenge on Huginn,
-K=3 vs K=4 on the graph model). All data is already on disk; no new runs. If the commitment point
-is early and difficulty-invariant, that is a positive finding to lead with.
+Commitment-point analysis is DONE (RESULT 10, `src/lattrack/commitment.py`): the answer is fixed
+at ~0.39 of the trajectory and task difficulty does not move it. That is the positive finding to
+lead with — what latent steps DO, not what they fail to do — with the RESULT 9 caveat attached.
+Loose thread, too thin to claim: on ARC-Easy the questions Huginn gets wrong commit later
+(0.463 vs 0.326, n=25 each, intervals barely touching).
 
-Then, if the paper is going ahead: add **CODI** (`zen-E/CODI-gpt2`, official, MIT, 406 MB, needs
+Agreed next, if the paper is going ahead: add **CODI** (`zen-E/CODI-gpt2`, official, MIT, 406 MB, needs
 its repo's model class vendored). That gives all three architecture families — feed-back (CODI),
 recurrent-depth (Huginn), from-scratch two-layer (ours) — which is the difference between "two
 models" and a paper. Optional after that: widen Huginn from 50 to 200 questions; finish the text
