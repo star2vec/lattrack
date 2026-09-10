@@ -749,3 +749,38 @@ Consequences, stated carefully.
 
 Scope: 29 pairs, intervals are wide, one intervention site (last position, loops 19+). A stronger
 intervention at every position would need prompt-length matching and was not run.
+
+### RESULT 10: the commitment point is ~0.39 of the trajectory, and difficulty does not move it
+
+`src/lattrack/commitment.py`, no new runs. For each question, the last step after which the
+decoded leader never changes again, as a fraction of the trajectory.
+
+| model | n | commitment point | mean step | never changed | committed by halfway |
+|---|---|---|---|---|---|
+| graph seed0 | 419 | 0.376 [0.346, 0.406] | 1.3 of 3-4 | 0.339 | 0.659 |
+| graph seed1 | 419 | 0.413 [0.386, 0.440] | 1.5 | 0.243 | 0.625 |
+| Huginn ARC-Challenge (K=32) | 50 | 0.392 [0.332, 0.454] | 12.1 | 0.000 | 0.800 |
+| Huginn ARC-Easy (K=30) | 50 | 0.394 [0.341, 0.454] | 11.4 | 0.000 | 0.720 |
+
+**Difficulty does not move it.** Huginn on ARC-Challenge and ARC-Easy commits at 0.392 and 0.394
+despite a 12-point accuracy difference (0.38 vs 0.50). Deliberation should take longer on harder
+problems; this does not budge. On the graph model, depth 3 vs depth 4 gives 0.330 vs 0.419
+(seed0) and 0.376 vs 0.448 (seed1), but the trajectories have 3 and 4 positions respectively, so
+the reachable fractions differ by construction and that comparison is not clean.
+
+Two secondary observations. Correct vs incorrect makes no difference on the graph model (0.372 vs
+0.446, wide overlap) or on Huginn ARC-Challenge (0.406 vs 0.383). On Huginn ARC-Easy the
+questions it gets WRONG commit later (0.326 vs 0.463, intervals barely touching, n=25 each) —
+worth a look if this is followed up, not a claim at this n.
+
+**The caveat that has to travel with this.** For Huginn, "never changed" is 0.000: every question
+has at least one leader change across 32 loops, which RESULT 9 showed is largely noise (34.5%
+baseline firing with no intervention at all). So Huginn's commitment point partly measures when
+the noise settles, not when a decision is made. For the graph model a third of questions never
+change at all, so its number is closer to a real decision time. The cross-architecture agreement
+at ~0.39 is therefore suggestive rather than a shared mechanism, and should be presented that way.
+
+What it adds: a positive, quantitative statement to lead with. These models fix their answer at a
+roughly fixed point about two fifths of the way through, and making the task harder does not
+give them a longer deliberation — consistent with RESULT 7 (the losing candidate is never a live
+competitor) and with the brief's own prior finding that identity is bound late.
