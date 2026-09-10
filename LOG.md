@@ -916,3 +916,41 @@ chat_prefill, MPS, K=32 (ARC-Challenge) into `results/huginn_fp32/` and K=30 (AR
 `results/huginn_easy_fp32/`. Estimate from median trajectories of the bf16 runs: ~32 + ~21 min plus
 two ~2 min loads. Purpose: clean per-transition counts before any Huginn number is published;
 recompute RESULT 2's event rate, RESULT 10's distribution and RESULT 11's late movers on fp32 steps.
+
+### RESULT 12: the fp32 option readout leaves every Huginn number where it was; the early near-ties are real
+
+`huginn_lens.py --readout fp32-letters`, ARC-Challenge K=32 (`results/huginn_fp32/`, 26.8 s per
+trajectory) and ARC-Easy K=30 (`results/huginn_easy_fp32/`, 21.6 s), same 50 questions each, base
+condition, chat_prefill, MPS; compared by `src/lattrack/fp32_compare.py` (`results/fp32_compare.md`,
+`.json`). Tripwires 0.0 / 0.0; fp32 vs bf16 letter logits within 0.062 on every question. The bf16
+steps recorded in the rerun equal the earlier runs to the bit (max diff 0.0 on both datasets), so the
+only thing that changed is the readout.
+
+| quantity | ARC-C bf16 | ARC-C fp32 | ARC-E bf16 | ARC-E fp32 |
+|---|---|---|---|---|
+| leader changes per question | 5.54 | 5.20 | 5.30 | 4.98 |
+| transitions with a side margin < 0.13 | 195/277 | 156/260 | 173/265 | 139/249 |
+| Cui-Ye event rate | 0.66 | 0.66 | 0.68 | 0.76 |
+| (correct, top distractor) ever crosses | 0.90 | 0.92 | 0.98 | 1.00 |
+| distractor pairs ever cross | 0.98 | 0.99 | 0.99 | 0.99 |
+| last-change loop, mean (median) | 12.1 (10) | 11.4 (10) | 11.4 (10) | 11.5 (10) |
+| answer at loop 16 differs from final | 5/50 | 4/50 | 8/50 | 5/50 |
+| final answer agrees across readouts | | 49/50 | | 47/50 |
+| final accuracy | 0.38 | 0.36 | 0.50 | 0.54 |
+| accuracy at loops 13/14 (fp32) | | 0.36-0.38 | | 0.66 / 0.66 |
+
+**Correction to the RESULT 10 addendum.** I wrote that 65-70% of Huginn's leader changes were bf16
+quantisation ties inflating per-transition counts. Tested: in fp32, 56-60% of transitions STILL have a
+side margin below 0.13. The early options are genuinely near-tied; bf16 turned "nearly equal" into
+"exactly equal", which looked like an artefact and is not one. Changes per question move by 0.3, the
+event rate by 0 and +0.08, the last-change loop not at all. Every Huginn number in RESULTS 2, 9, 10
+and 11 stands as published, now with readout precision ruled out.
+
+**The accuracy peak survives the precision change.** ARC-Easy in fp32: 0.66 at loops 13-14, 0.54
+converged (33 vs 27 of 50). Same shape as bf16 (0.66 / 0.52). Still n=50 and overlapping intervals;
+still the one live lead, and the next thing to test at n=200 (~1.5 h at 21.6 s per trajectory,
+K=30 is enough since nothing moves after loop 24 per RESULT 11).
+
+Both runs proposed after the RESULT 10 addendum are done. Machine note: at 26.8 and 21.6 s per
+trajectory these runs went 30% faster than the earlier bf16 ones (37.8 / 24.9 s) with the desktop
+quieter; the estimate-from-the-median rule held.
