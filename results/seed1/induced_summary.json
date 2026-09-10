@@ -1,0 +1,292 @@
+{
+ "schema": "induced-v1",
+ "n_graphs": 120,
+ "by_alpha": {
+  "0.0": {
+   "answer_changed": {
+    "point": 0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.25833333333333336,
+     "lo": 0.18333333333333332,
+     "hi": 0.3416666666666667,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.625,
+     "lo": 0.5333333333333333,
+     "hi": 0.7166666666666667,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": null,
+    "n_answer_moved": 0
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.25833333333333336,
+     "lo": 0.18333333333333332,
+     "hi": 0.3333333333333333,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.525,
+     "lo": 0.43333333333333335,
+     "hi": 0.6166666666666667,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": null,
+    "n_answer_moved": 0
+   }
+  },
+  "0.25": {
+   "answer_changed": {
+    "point": 0.025,
+    "lo": 0.0,
+    "hi": 0.058333333333333334,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.25,
+     "lo": 0.175,
+     "hi": 0.3333333333333333,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.6083333333333333,
+     "lo": 0.5166666666666667,
+     "hi": 0.6916666666666667,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 3
+    },
+    "n_answer_moved": 3
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.25833333333333336,
+     "lo": 0.18333333333333332,
+     "hi": 0.3333333333333333,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.5333333333333333,
+     "lo": 0.44166666666666665,
+     "hi": 0.625,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 3
+    },
+    "n_answer_moved": 3
+   }
+  },
+  "0.5": {
+   "answer_changed": {
+    "point": 0.175,
+    "lo": 0.10833333333333334,
+    "hi": 0.24187499999999887,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.03333333333333333,
+    "lo": 0.008333333333333333,
+    "hi": 0.06666666666666667,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.30833333333333335,
+     "lo": 0.23333333333333334,
+     "hi": 0.39166666666666666,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.6,
+     "lo": 0.5083333333333333,
+     "hi": 0.6916666666666667,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.42857142857142855,
+     "lo": 0.23809523809523808,
+     "hi": 0.6190476190476191,
+     "n": 21
+    },
+    "n_answer_moved": 21
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.31666666666666665,
+     "lo": 0.23333333333333334,
+     "hi": 0.4,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.55,
+     "lo": 0.4666666666666667,
+     "hi": 0.6416666666666667,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.5238095238095238,
+     "lo": 0.2857142857142857,
+     "hi": 0.7142857142857143,
+     "n": 21
+    },
+    "n_answer_moved": 21
+   }
+  },
+  "0.75": {
+   "answer_changed": {
+    "point": 0.6166666666666667,
+    "lo": 0.525,
+    "hi": 0.7,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.25,
+    "lo": 0.175,
+    "hi": 0.325,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.49166666666666664,
+     "lo": 0.4,
+     "hi": 0.575,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.5916666666666667,
+     "lo": 0.5,
+     "hi": 0.6833333333333333,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.581081081081081,
+     "lo": 0.47297297297297297,
+     "hi": 0.6891891891891891,
+     "n": 74
+    },
+    "n_answer_moved": 74
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.5083333333333333,
+     "lo": 0.425,
+     "hi": 0.6,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.5666666666666667,
+     "lo": 0.475,
+     "hi": 0.6583333333333333,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.6216216216216216,
+     "lo": 0.5135135135135135,
+     "hi": 0.7297297297297297,
+     "n": 74
+    },
+    "n_answer_moved": 74
+   }
+  },
+  "1.0": {
+   "answer_changed": {
+    "point": 0.8583333333333333,
+    "lo": 0.7916666666666666,
+    "hi": 0.9166666666666666,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.48333333333333334,
+    "lo": 0.4,
+    "hi": 0.575,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.675,
+     "lo": 0.5916666666666667,
+     "hi": 0.7583333333333333,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.5833333333333334,
+     "lo": 0.499791666666667,
+     "hi": 0.675,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.7184466019417476,
+     "lo": 0.6310679611650486,
+     "hi": 0.7963592233009695,
+     "n": 103
+    },
+    "n_answer_moved": 103
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.6666666666666666,
+     "lo": 0.5833333333333334,
+     "hi": 0.75,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.5916666666666667,
+     "lo": 0.5,
+     "hi": 0.6752083333333322,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.7087378640776699,
+     "lo": 0.6116504854368932,
+     "hi": 0.7961165048543689,
+     "n": 103
+    },
+    "n_answer_moved": 103
+   }
+  }
+ },
+ "conditions": {
+  "run_name": "seed1",
+  "n_graphs": 120,
+  "checkpoint_sha256": "df653c43eca0c58a3a690ef54a59dd1c73e45210c814c0fdc506bcc9e6383a69",
+  "alphas": [
+   0.0,
+   0.25,
+   0.5,
+   0.75,
+   1.0
+  ],
+  "injected_passes": "last_intermediate",
+  "donor": "different-structure training graph, same K, disjoint candidates",
+  "seconds": 31.6,
+  "date": "2026-09-10"
+ }
+}

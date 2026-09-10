@@ -659,3 +659,49 @@ It also matches RRR's own finding that identity is bound late, now measured on t
 Scope: this is the 2-layer graph model. It says nothing about Huginn, where no equivalent matched
 control exists (the four ARC options are all "named candidates"; there is no class of nodes that
 differ only by not being named).
+
+### RESULT 8: the detector is sensitive ON THE LATENT MODEL ITSELF (induced reversals)
+
+RESULT 6 validated the readout on a text model, because no corpus of documented latent reversals
+exists. This validates it on the substrate the negative results are actually about, by
+MANUFACTURING the reversal. `src/lattrack/induced.py`, 120 test graphs, both seeds, both readouts.
+
+Construction: a different-structure donor (training graph, same K, candidates disjoint from the
+recipient's) has its thought blended into the recipient at the LAST intermediate pass, at strength
+alpha. Early positions keep the recipient's own state, so there is a genuine "before"; the
+injected pass and everything downstream carry the donor. The pair tracked is (donor's target,
+recipient's target). Ground truth is the model's own output: did the answer actually move?
+
+Dose-response, seed0 (n=120), with the contrast that matters — among graphs given the SAME
+intervention, those whose answer moved vs those whose answer did not:
+
+| alpha | answer moved | fires when it moved (emb / jac) | fires when it did not (emb / jac) |
+|---|---|---|---|
+| 0.00 | 0% | — | 0.300 / 0.225 |
+| 0.25 | 5% | 0.500 / 0.667 | 0.289 / 0.219 |
+| 0.50 | 23% | 0.407 / 0.519 | 0.301 / 0.258 |
+| 0.75 | 72% | 0.517 / 0.678 | 0.273 / 0.273 |
+| 1.00 | 90% | **0.630 / 0.731** | **0.083 / 0.167** |
+
+Seed1 at full strength: answer moved on 86%; fires when moved 0.718 (emb) / 0.709 (jac), when not
+0.412 / 0.412.
+
+**The detector fires on a real mid-trajectory answer change in this model.** At full strength,
+63-73% of graphs whose answer genuinely moved show a crossing, against 8-17% (seed0) of graphs
+that received the identical intervention but whose answer did not move. The contrast is within
+the same intervention, so it controls for the global perturbation an injection causes — which the
+arbitrary-pair null cannot, because injecting a foreign state moves every node (the null pair
+crosses on 44-68% regardless of alpha, and is uninformative here for exactly that reason).
+Seed1's separation is weaker (0.71 vs 0.41) but the same direction.
+
+Sensitivity floor: detection is reliable at alpha >= 0.75 and marginal at 0.5, where only 23% of
+answers move at all. So the honest statement the negative results can now carry is: a natural flip
+of the size we can induce would have been caught roughly two times in three, and we observed none
+above the arbitrary-pair rate.
+
+Design error worth keeping. The first version injected at ALL intermediate passes (RRR's
+donor_intermediate). That replaces the whole trajectory, so the donor's answer leads from
+position 0 and there is no "before" to cross from: at alpha=1 the answer moved on 95% of graphs
+while the detector fired on 35%, BELOW the 70% null. Read naively that is "the detector is blind".
+It was the construction that was wrong, not the detector. The sensitivity curve is what exposed
+it — a single yes/no at full strength would have produced a confidently wrong negative.

@@ -1,0 +1,292 @@
+{
+ "schema": "induced-v1",
+ "n_graphs": 120,
+ "by_alpha": {
+  "0.0": {
+   "answer_changed": {
+    "point": 0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.3,
+     "lo": 0.21666666666666667,
+     "hi": 0.38333333333333336,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.6083333333333333,
+     "lo": 0.5166666666666667,
+     "hi": 0.6916666666666667,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": null,
+    "n_answer_moved": 0
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.225,
+     "lo": 0.15,
+     "hi": 0.3,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.44166666666666665,
+     "lo": 0.35833333333333334,
+     "hi": 0.5252083333333322,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": null,
+    "n_answer_moved": 0
+   }
+  },
+  "0.25": {
+   "answer_changed": {
+    "point": 0.05,
+    "lo": 0.016666666666666666,
+    "hi": 0.09166666666666666,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.008333333333333333,
+    "lo": 0.0,
+    "hi": 0.025,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.3,
+     "lo": 0.21666666666666667,
+     "hi": 0.38333333333333336,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.6583333333333333,
+     "lo": 0.575,
+     "hi": 0.7416666666666667,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.5,
+     "lo": 0.16666666666666666,
+     "hi": 0.8333333333333334,
+     "n": 6
+    },
+    "n_answer_moved": 6
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.24166666666666667,
+     "lo": 0.16666666666666666,
+     "hi": 0.31666666666666665,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.4666666666666667,
+     "lo": 0.38333333333333336,
+     "hi": 0.5583333333333333,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.6666666666666666,
+     "lo": 0.3333333333333333,
+     "hi": 1.0,
+     "n": 6
+    },
+    "n_answer_moved": 6
+   }
+  },
+  "0.5": {
+   "answer_changed": {
+    "point": 0.225,
+    "lo": 0.15,
+    "hi": 0.30833333333333335,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.05,
+    "lo": 0.016666666666666666,
+    "hi": 0.09166666666666666,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.325,
+     "lo": 0.24166666666666667,
+     "hi": 0.4083333333333333,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.6833333333333333,
+     "lo": 0.6,
+     "hi": 0.7666666666666667,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.4074074074074074,
+     "lo": 0.2222222222222222,
+     "hi": 0.5925925925925926,
+     "n": 27
+    },
+    "n_answer_moved": 27
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.31666666666666665,
+     "lo": 0.23333333333333334,
+     "hi": 0.4,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.44166666666666665,
+     "lo": 0.35833333333333334,
+     "hi": 0.5333333333333333,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.5185185185185185,
+     "lo": 0.3333333333333333,
+     "hi": 0.7037037037037037,
+     "n": 27
+    },
+    "n_answer_moved": 27
+   }
+  },
+  "0.75": {
+   "answer_changed": {
+    "point": 0.725,
+    "lo": 0.6416666666666667,
+    "hi": 0.8,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.4,
+    "lo": 0.31666666666666665,
+    "hi": 0.48333333333333334,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.45,
+     "lo": 0.35833333333333334,
+     "hi": 0.5416666666666666,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.6666666666666666,
+     "lo": 0.5833333333333334,
+     "hi": 0.75,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.5172413793103449,
+     "lo": 0.40229885057471265,
+     "hi": 0.6206896551724138,
+     "n": 87
+    },
+    "n_answer_moved": 87
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.5666666666666667,
+     "lo": 0.475,
+     "hi": 0.65,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.5,
+     "lo": 0.4083333333333333,
+     "hi": 0.5916666666666667,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.6781609195402298,
+     "lo": 0.5862068965517241,
+     "hi": 0.7701149425287356,
+     "n": 87
+    },
+    "n_answer_moved": 87
+   }
+  },
+  "1.0": {
+   "answer_changed": {
+    "point": 0.9,
+    "lo": 0.8416666666666667,
+    "hi": 0.95,
+    "n": 120
+   },
+   "answer_is_donor_target": {
+    "point": 0.55,
+    "lo": 0.4666666666666667,
+    "hi": 0.6416666666666667,
+    "n": 120
+   },
+   "emb": {
+    "detector_fires_real": {
+     "point": 0.575,
+     "lo": 0.48333333333333334,
+     "hi": 0.6583333333333333,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.675,
+     "lo": 0.5833333333333334,
+     "hi": 0.7583333333333333,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.6296296296296297,
+     "lo": 0.5370370370370371,
+     "hi": 0.7222222222222222,
+     "n": 108
+    },
+    "n_answer_moved": 108
+   },
+   "jac": {
+    "detector_fires_real": {
+     "point": 0.675,
+     "lo": 0.5833333333333334,
+     "hi": 0.7583333333333333,
+     "n": 120
+    },
+    "detector_fires_null": {
+     "point": 0.5416666666666666,
+     "lo": 0.45,
+     "hi": 0.6333333333333333,
+     "n": 120
+    },
+    "detector_fires_real_given_answer_moved": {
+     "point": 0.7314814814814815,
+     "lo": 0.6481481481481481,
+     "hi": 0.8055555555555556,
+     "n": 108
+    },
+    "n_answer_moved": 108
+   }
+  }
+ },
+ "conditions": {
+  "run_name": "seed0",
+  "n_graphs": 120,
+  "checkpoint_sha256": "c2de0080c3fabf2d3a11ee87cd9d683c5cc8342161a89e7c82cf2b0c90408093",
+  "alphas": [
+   0.0,
+   0.25,
+   0.5,
+   0.75,
+   1.0
+  ],
+  "injected_passes": "last_intermediate",
+  "donor": "different-structure training graph, same K, disjoint candidates",
+  "seconds": 33.8,
+  "date": "2026-09-10"
+ }
+}
