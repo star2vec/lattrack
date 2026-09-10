@@ -954,3 +954,48 @@ K=30 is enough since nothing moves after loop 24 per RESULT 11).
 Both runs proposed after the RESULT 10 addendum are done. Machine note: at 26.8 and 21.6 s per
 trajectory these runs went 30% faster than the earlier bf16 ones (37.8 / 24.9 s) with the desktop
 quieter; the estimate-from-the-median rule held.
+
+#### 2026-09-11 — n=200 launched (Huginn, ARC-Easy, fp32 letters)
+
+Testing the accuracy peak of RESULTS 11/12 (0.66 at loops 13-14 vs 0.52-0.54 converged, n=50).
+`huginn_lens.py --dataset arc_easy --K 30 --n 200 --readout fp32-letters --conditions base` into
+`results/huginn_easy_fp32_n200/`. `load_questions` shuffles the whole four-option set under
+QUESTION_SEED and takes the first n, so the 200 extend the 50; the 50 finished rows were copied in
+and are skipped (bit-identical by RESULT 12's tripwire). 150 new trajectories at ~21.6 s: ~54 min plus
+model load. Machine before launch: 77% free, compressor 0.9 GB, nothing else running. Read against
+the n=50 shape: peak at loops 13-14 vs converged value at loop 29, bootstrap intervals; no threshold
+set in advance beyond "intervals apart or not".
+
+### RESULT 13: at n=200 the mid-trajectory accuracy peak shrinks to ~5 points and does not clear the bar
+
+`results/huginn_easy_fp32_n200/` (200 ARC-Easy questions, K=30, fp32 letters, base condition,
+24.1 s per trajectory, done 01:44), analysed by `src/lattrack/peak.py` (`results/peak.md`, `.json`).
+Pre-registered reading (launch note above): accuracy of the loop-13/14 leader vs the converged
+leader at loop 29, bootstrap intervals, bar = intervals apart.
+
+| set | n | loop 13-14 | loop 29 | paired difference (right at 13 minus right at 29) | gained / lost |
+|---|---|---|---|---|---|
+| first 50 (the RESULT 11/12 set) | 50 | 0.660 | 0.540 | 0.120 [0.000, 0.240] | 8 / 2 |
+| questions 51-200, held out | 150 | 0.513 | 0.467 | 0.047 [-0.013, 0.107] | 15 / 8 |
+| all | 200 | 0.550 [0.480, 0.620] | 0.485 [0.415, 0.555] | 0.065 [0.005, 0.120] | 23 / 10 |
+
+The loops were chosen on the first 50, so the 150 are the honest test: the effect is there in
+direction (15 questions right at loop 13 and wrong at convergence, against 8 the other way) but at
+about 5 points with an interval that includes zero. On all 200 the paired interval clears zero by
+0.005. By the bar set before the run, this does not clear. Reading: the n=50 value of 12 points was
+the top of the noise; the underlying effect, if real, is ~5 points on one model and one task.
+Nailing 5 points to an interval clearly apart from zero would take roughly 600-800 questions (~4-5 h
+on this Mac), and the result would be a footnote to Geiping et al.'s accuracy-vs-steps curves, not a
+lead. Not pursued.
+
+**RESULT 2 at n=200 (ARC-Easy, fp32).** Cui-Ye event rate 0.635 [0.565, 0.700]; the (correct, top
+distractor) pair crosses on 0.965 of questions vs distractor pairs 0.992 — no separation; accuracy
+with an event 0.488 vs without 0.479 — no backtracking benefit; last change at loop 10 (median);
+answer at loop 16 differs from the final on 34/200 (17%). The THIN cell in the results table is now
+n=200 on ARC-Easy and the negative is unchanged.
+
+**Decision the run was for.** The lead did not clear, so the write-up is the post: two calibrated
+negatives (RESULTS 1+8, 2+9, now n=200 on one dataset), the RESULT 7 mechanism, the build -> bind ->
+sharpen -> stop description (RESULTS 10 addendum, 11, 12), with the 5-point hump reported as an
+observation for anyone with a GPU. CODI is not needed for the post. Everything is on local machines;
+total rental spend for the project remains $0.
