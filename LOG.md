@@ -999,3 +999,18 @@ negatives (RESULTS 1+8, 2+9, now n=200 on one dataset), the RESULT 7 mechanism, 
 sharpen -> stop description (RESULTS 10 addendum, 11, 12), with the 5-point hump reported as an
 observation for anyone with a GPU. CODI is not needed for the post. Everything is on local machines;
 total rental spend for the project remains $0.
+
+#### 2026-09-11 — figures for the post: `writeup/figures/`
+
+Six scripts, one per figure, reading `results/` directly (`style.py` shared; `make_all.sh` regenerates;
+`IDS.md` states each example's selection rule and IDs). No post text here — the user writes it. Two
+choices worth recording. (1) Figure 5A's first candidate, the literal "Wait, no, actually" trace
+(Mercury_SC_LBS10272), turned out to have a 3.5-logit hardening of its existing answer at the third
+wait — no leader change, but above the phrasing-noise q95 — so a stated rule was applied instead
+(no leader change and swing < q95 in every wait window; 9 of 12 traces qualify) and Mercury_7007858
+drawn. (2) Figure 4A: the three random initial states track each other closely (per-loop leader
+agreement 0.90, Jaccard of change-loop sets 0.46, identical sets 8%); the panel is titled "an early
+wobble, then the same letter", not "changes land in different places", because that is what it shows.
+Both panels shade the loops before a letter is the model's next token, where option probabilities are
+ratios of near-zero mass. Figure 2 colours by R7's z-score, not rank, so "held but never close" is
+visible; figure 4B carries a margin strip so "sharpen, then stop" is in the same frame as "stop".
