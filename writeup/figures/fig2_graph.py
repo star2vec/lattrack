@@ -86,11 +86,15 @@ box = dict(boxstyle="round,pad=0.25", fc="white", ec="none", alpha=0.85)
 ax.text(len(cols) - 0.6, 0.2, "reachable from the root", fontsize=6.5, va="top", ha="right", bbox=box)
 ax.text(len(cols) - 0.6, n_reach + 0.2, "unreachable (reference class)", fontsize=6.5, va="top", ha="right", color="#555555", bbox=box)
 cb = f.colorbar(im, ax=ax, orientation="horizontal", fraction=0.035, pad=0.16, shrink=1.0)
-cb.set_label(f"score, in spreads of the unreachable class\n(decoy held at +{Z[order.index(pr.decoy), -2]:.1f} late; target ends {Z[order.index(pr.target), -1] - Z[order.index(pr.decoy), -1]:.0f} clear)", fontsize=6.5); cb.ax.tick_params(labelsize=7)
+cb.set_label(f"score, in standard deviations of unreachable nodes\n(decoy held at +{Z[order.index(pr.decoy), -2]:.1f} late; target ends {Z[order.index(pr.target), -1] - Z[order.index(pr.decoy), -1]:.0f} clear)", fontsize=6.5); cb.ax.tick_params(labelsize=7)
+# header rows: the target's and the decoy's score at each position, in the colorbar's units
 for k in range(len(cols)):
     zt, zd = Z[order.index(pr.target), k], Z[order.index(pr.decoy), k]
-    ax.text(k, -0.9, f"T{zt:+.1f}\nD{zd:+.1f}", ha="center", va="bottom", fontsize=6, color="#444444")
-ax.set_ylim(len(order) - 0.5, -2.6)
+    ax.text(k, -1.95, f"{zt:+.1f}", ha="center", va="center", fontsize=6.5, color=ANSWER)
+    ax.text(k, -1.05, f"{zd:+.1f}", ha="center", va="center", fontsize=6.5, color=RIVAL)
+ax.text(-0.6, -1.95, "target", ha="right", va="center", fontsize=6.5, color=ANSWER)
+ax.text(-0.6, -1.05, "decoy", ha="right", va="center", fontsize=6.5, color=RIVAL)
+ax.set_ylim(len(order) - 0.5, -2.5)
 title(ax, f"one graph (test #{gi}, depth {r['K']}): one flip, at a latent step")
 
 panel_label(ax, "A", x=-0.28, y=1.05)
