@@ -5,7 +5,7 @@ the root thought, the latent thoughts, the answer position). Colour is the node'
 z-scored against the unreachable non-candidates at that position (RESULT 7's reference
 class), so the frontier lighting up, the target pulling ahead, and the decoy being held
 but never close are all one picture. Outlined cell = the top node at that position.
-B. Crossing rate per transition for the tracked (target, decoy) pair against an arbitrary
+B. Flip rate per transition for the candidate (target, decoy) pair against a random node
 pair and a matched-depth pair, all 419 test graphs, seed0 (RESULT 1; K=4 graphs shown).
 
 Example rule (IDS.md): first graph in index order with K=4, answered correctly, exactly one
@@ -91,7 +91,7 @@ for k in range(len(cols)):
     zt, zd = Z[order.index(pr.target), k], Z[order.index(pr.decoy), k]
     ax.text(k, -0.9, f"T{zt:+.1f}\nD{zd:+.1f}", ha="center", va="bottom", fontsize=6, color="#444444")
 ax.set_ylim(len(order) - 0.5, -2.6)
-title(ax, f"one graph (test #{gi}, depth {r['K']}): the leader changes once, at a latent step")
+title(ax, f"one graph (test #{gi}, depth {r['K']}): one flip, at a latent step")
 
 panel_label(ax, "A", x=-0.28, y=1.05)
 
@@ -99,17 +99,17 @@ panel_label(ax, "A", x=-0.28, y=1.05)
 s = json.load(open(RESULTS / RUN / "lens_summary_all.json"))["crossing_rate_forward_names"]
 trans = ["root>l0", "l0>l1", "l1>l2", "l2>A"]
 x = np.arange(len(trans))
-for key, color, ls, label, dx in (("target_decoy", ANSWER, "-", "tracked pair: target vs decoy", -0.08),
-                                  ("null_any", CONTROL, "--", "an arbitrary pair of nodes", 0.0),
-                                  ("null_matched", CONTROL_LIGHT, "--", "an arbitrary pair, matched depth", 0.08)):
+for key, color, ls, label, dx in (("target_decoy", ANSWER, "-", "candidate pair", -0.08),
+                                  ("null_any", CONTROL, "--", "random node pair", 0.0),
+                                  ("null_matched", CONTROL_LIGHT, "--", "random node pair, matched depth", 0.08)):
     pts = [s[key][t] for t in trans]
     y = [p["point"] for p in pts]; lo = [p["point"] - p["lo"] for p in pts]; hi = [p["hi"] - p["point"] for p in pts]
     bx.errorbar(x + dx, y, yerr=[lo, hi], color=color, ls=ls, marker="o", ms=4, lw=1.6, capsize=2, label=label)
 bx.set_xticks(x); bx.set_xticklabels(["root→l0", "l0→l1", "l1→l2", "l2→answer"], fontsize=7.5)
-bx.set_ylim(0, 0.6); bx.set_ylabel("fraction of graphs whose leader changes at this step", fontsize=8)
-title(bx, f"all depth-4 test graphs (n={s['target_decoy']['l1>l2']['n']}): the tracked pair crosses no more than an arbitrary one")
+bx.set_ylim(0, 0.6); bx.set_ylabel("fraction of graphs with a flip at this step", fontsize=8)
+title(bx, f"all depth-4 test graphs (n={s['target_decoy']['l1>l2']['n']}): the candidate pair flips no more than a random pair")
 bx.legend(loc="upper right", fontsize=7)
-bx.annotate("the answer step\nalmost never\nchanges the leader", xy=(3, s["target_decoy"]["l2>A"]["point"]), xytext=(1.55, 0.09),
+bx.annotate("the answer step\nalmost never flips", xy=(3, s["target_decoy"]["l2>A"]["point"]), xytext=(1.55, 0.09),
             fontsize=7, color=ANSWER, arrowprops=dict(arrowstyle="-", color=ANSWER, lw=0.8))
 panel_label(bx, "B", x=-0.22, y=1.05)
 save(f, "fig2_graph")

@@ -16,8 +16,8 @@ from style import FULL, ROOT, fig, save
 TEXT_MODEL = re.search(r'MODEL_ID\s*=\s*"([^"]+)"', (ROOT / "src" / "lattrack" / "wait_lens.py").read_text()).group(1).split("/")[-1]
 W = 19   # wrap width inside a cell
 
-COLS = ["leader changes\nabove an\narbitrary pair?", "at the noise floor\n(restarts,\nredraws)?",
-        "detector catches\nan induced\nreversal?", "rival held but\nnever close?",
+COLS = ["flips above a\nrandom node\npair?", "at the noise floor\n(restarts,\nredraws)?",
+        "readout shows\nan induced\nreversal?", "rival held but\nnever close?",
         "same verdict in\na second basis?", "readout precision\nruled out?"]
 ROWS = [("2-layer graph model", "from scratch, feed-back · ProsQA"),
         ("Huginn-0125", "depth-recurrent, 3.5B · ARC"),
@@ -27,7 +27,7 @@ S, U, F, N, X = "supports", "unbacked", "fail", "na", "notrun"
 CELLS = [
     [("no — at the null rate\nR1", S), ("flips sit at the redraw floor\nR1", S), ("yes — 63–73% vs 8–17%\nR8", S),
      ("held late, 4–6 spreads behind\nR7", S), ("yes — causal-Jacobian basis\nR5", S), ("fp32 throughout", S)],
-    [("no — at the null rate\nn=200 · R2", U), ("changes at the reseed floor\nR2", U), ("NO — 78% vs 83%;\n34.5% with nothing done · R9", F),
+    [("no — at the null rate\nn=200 · R2", U), ("flips at the reseed floor\nR2", U), ("NO — 78% vs 83%;\n34.5% with nothing done · R9", F),
      ("n.a.", N), ("n.a.", N), ("yes — fp32 letter readout\nR12", S)],
     [("'wait' is not where the\nleaning moves · R3", S), ("phrasing noise exceeds\nwithin-trace change · R4", U), ("follows documented reversals,\n20× the control · R6", S),
      ("n.a.", N), ("n.a.", N), ("fp32 readout", S)],
@@ -35,7 +35,7 @@ CELLS = [
      ("n.a.", N), ("n.a.", N), ("—", N)],
 ]
 FILL = {S: "#d9e4f0", U: "#f5e6bf", F: "#f1cfcd", N: "#f0f0f0", X: "#ffffff"}
-LEGEND = [(S, "result stands, detector validated on this model"), (U, "result stands, detector not calibrated here"),
+LEGEND = [(S, "result stands, readout validated on this model"), (U, "result stands, readout not calibrated here"),
           (F, "check failed"), (N, "not applicable"), (X, "not run")]
 
 f = fig(FULL, 4.8)

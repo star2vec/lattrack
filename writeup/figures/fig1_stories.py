@@ -1,7 +1,7 @@
 """Figure 1: the three stories a per-step readout can tell. Schematic, no data.
 
 Two candidates read at every latent step. A REVERSAL: the leader switches and stays
-switched. A GAIN RAMP: same leader throughout, the contrast grows. NOISE: two near-tied
+switched. CONFIDENCE BUILDUP: same leader throughout, the contrast grows. NOISE: two near-tied
 lines that cross by accident, landing differently on every restart.
 """
 
@@ -24,7 +24,7 @@ a.set_title("a reversal"); a.text(0.5, -1.75, "leader switches\nand stays switch
 b = axes[1]
 b.plot(x, 0.25 + 1.6 * x ** 1.3, color=ANSWER, lw=2)
 b.plot(x, 0.05 - 0.9 * x ** 1.3, color=RIVAL, lw=2)
-b.set_title("a gain ramp"); b.text(0.5, -1.75, "same leader,\ncontrast grows", ha="center", fontsize=8, color="#555555")
+b.set_title("confidence buildup"); b.text(0.5, -1.75, "same leader,\ncontrast grows", ha="center", fontsize=8, color="#555555")
 
 # C. noise: three restarts, near-tied, crossing in different places
 c = axes[2]

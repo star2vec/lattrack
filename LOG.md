@@ -1014,3 +1014,13 @@ wobble, then the same letter", not "changes land in different places", because t
 Both panels shade the loops before a letter is the model's next token, where option probabilities are
 ratios of near-zero mass. Figure 2 colours by R7's z-score, not rank, so "held but never close" is
 visible; figure 4B carries a margin strip so "sharpen, then stop" is in the same frame as "stop".
+
+#### 2026-09-12 — figures aligned to the post's vocabulary
+
+"flip" is the one word for the event in every axis label, title and checklist cell (was "leader
+change"/"crosses"); figure 3 uses the post's phrases verbatim ("readout showed a swap", "random pair
+swapped", "blend strength", "the readout tells them apart"); figure 1B is "confidence buildup";
+figure 2B says "candidate pair" and "random node pair". Figure 4A's caption now states its set —
+ARC-Easy, 50 questions, 30 loops: identical flip-loop sets on 8% of restarts — and gives the
+ARC-Challenge K=32 figure (4%) the post's text uses; the 0.62/0.39/0.24 fractions are gone from
+figure 4B (the post no longer makes that point), K lines labelled only K=16, K=30. Audit clean.
