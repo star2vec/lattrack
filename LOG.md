@@ -1024,3 +1024,14 @@ figure 2B says "candidate pair" and "random node pair". Figure 4A's caption now 
 ARC-Easy, 50 questions, 30 loops: identical flip-loop sets on 8% of restarts — and gives the
 ARC-Challenge K=32 figure (4%) the post's text uses; the 0.62/0.39/0.24 fractions are gone from
 figure 4B (the post no longer makes that point), K lines labelled only K=16, K=30. Audit clean.
+
+#### 2026-09-13 — opening banner (`writeup/figures/fig0_banner.py`)
+
+A scratch page of working, no legible text: rows of cursive-looking strokes on ruled paper, one row
+struck through in the post's red, a red arrow looping from a later row back to an earlier one, a
+boxed answer in the post's blue. Backtracking as it looks when it is legible — the foil for every
+trajectory figure after it. 3:1 with the content inside the middle half so a centred 1.9:1 social
+card keeps the strike, the loop and the box. Two variants rendered (dense: six rows; sparse: four),
+user to pick; the chosen one becomes `out/fig0_banner`. Placement agreed: under the title, before
+the first sentence, uncaptioned. Robot rejected: it anthropomorphises the thing the post argues
+against.
