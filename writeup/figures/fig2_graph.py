@@ -20,7 +20,7 @@ import sys
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Rectangle
-from style import ANSWER, CONTROL, CONTROL_LIGHT, FULL, RESULTS, RIVAL, ROOT, fig, panel_label, save
+from style import ANSWER, CONTROL, CONTROL_LIGHT, FULL, RESULTS, RIVAL, ROOT, fig, panel_label, save, title, wrap
 
 sys.path.insert(0, str(ROOT / "src" / "lattrack"))
 from prompts import Prompt, pin_seed  # noqa: E402
@@ -67,7 +67,7 @@ names = {"root": "root\nthought", "A": "answer\nposition"}
 cols = [names.get(p, f"latent\n{p}") for p in r["positions"]]
 
 f = fig(FULL, 4.6)
-gs = f.add_gridspec(1, 2, width_ratios=[1.05, 1.0], wspace=0.75)
+gs = f.add_gridspec(1, 2, width_ratios=[1.05, 1.0], wspace=0.5)
 ax, bx = f.add_subplot(gs[0]), f.add_subplot(gs[1])
 
 cmap = LinearSegmentedColormap.from_list("post", ["#f4f4f4", "#c9d7e6", ANSWER])
@@ -82,18 +82,17 @@ for k, t in enumerate(top):
     ax.add_patch(Rectangle((k - 0.5, t - 0.5), 1, 1, fill=False, ec="#222222", lw=1.2))
 n_reach = len([v for v in order if v in depths])
 ax.axhline(n_reach - 0.5, color="#222222", lw=0.8)
-ax.text(len(cols) - 0.45, n_reach / 2 - 0.5, "reachable\nfrom the root", fontsize=7, va="center", ha="left")
-ax.text(len(cols) - 0.45, n_reach + (len(order) - n_reach) / 2 - 0.5, "unreachable\n(reference class)", fontsize=7, va="center", ha="left", color="#555555")
-cb = f.colorbar(im, ax=ax, orientation="horizontal", fraction=0.035, pad=0.16, shrink=0.9)
-cb.set_label("node score, in spreads of the unreachable class", fontsize=7.5); cb.ax.tick_params(labelsize=7)
+box = dict(boxstyle="round,pad=0.25", fc="white", ec="none", alpha=0.85)
+ax.text(len(cols) - 0.6, 0.2, "reachable from the root", fontsize=6.5, va="top", ha="right", bbox=box)
+ax.text(len(cols) - 0.6, n_reach + 0.2, "unreachable (reference class)", fontsize=6.5, va="top", ha="right", color="#555555", bbox=box)
+cb = f.colorbar(im, ax=ax, orientation="horizontal", fraction=0.035, pad=0.16, shrink=1.0)
+cb.set_label(f"score, in spreads of the unreachable class\n(decoy held at +{Z[order.index(pr.decoy), -2]:.1f} late; target ends {Z[order.index(pr.target), -1] - Z[order.index(pr.decoy), -1]:.0f} clear)", fontsize=6.5); cb.ax.tick_params(labelsize=7)
 for k in range(len(cols)):
     zt, zd = Z[order.index(pr.target), k], Z[order.index(pr.decoy), k]
     ax.text(k, -0.9, f"T{zt:+.1f}\nD{zd:+.1f}", ha="center", va="bottom", fontsize=6, color="#444444")
 ax.set_ylim(len(order) - 0.5, -2.6)
-ax.set_title(f"one graph (test #{gi}, depth {r['K']})\nthe leader changes once, at a latent step",
-             loc="left", fontsize=8.5, pad=8)
-ax.set_xlabel(f"decoy held at +{Z[order.index(pr.decoy), -2]:.1f} spreads late; target {Z[order.index(pr.target), -1] - Z[order.index(pr.decoy), -1]:.0f} spreads clear at the answer",
-              fontsize=7.5, labelpad=6)
+title(ax, f"one graph (test #{gi}, depth {r['K']}): the leader changes once, at a latent step")
+
 panel_label(ax, "A", x=-0.28, y=1.05)
 
 # B. crossing rate per transition
@@ -108,8 +107,7 @@ for key, color, ls, label, dx in (("target_decoy", ANSWER, "-", "tracked pair: t
     bx.errorbar(x + dx, y, yerr=[lo, hi], color=color, ls=ls, marker="o", ms=4, lw=1.6, capsize=2, label=label)
 bx.set_xticks(x); bx.set_xticklabels(["root→l0", "l0→l1", "l1→l2", "l2→answer"], fontsize=7.5)
 bx.set_ylim(0, 0.6); bx.set_ylabel("fraction of graphs whose leader changes at this step", fontsize=8)
-bx.set_title(f"all test graphs, depth-4 transitions (n={s['target_decoy']['l1>l2']['n']})\n"
-             "the tracked pair crosses no more than an arbitrary one", loc="left", fontsize=8.5, pad=8)
+title(bx, f"all depth-4 test graphs (n={s['target_decoy']['l1>l2']['n']}): the tracked pair crosses no more than an arbitrary one")
 bx.legend(loc="upper right", fontsize=7)
 bx.annotate("the answer step\nalmost never\nchanges the leader", xy=(3, s["target_decoy"]["l2>A"]["point"]), xytext=(1.55, 0.09),
             fontsize=7, color=ANSWER, arrowprops=dict(arrowstyle="-", color=ANSWER, lw=0.8))

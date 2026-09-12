@@ -21,7 +21,7 @@ import json
 
 import numpy as np
 from matplotlib.colors import ListedColormap
-from style import ANSWER, CONTROL, FAINT, FULL, OPTIONS, RESULTS, RIVAL, fig, panel_label, save
+from style import ANSWER, CONTROL, FAINT, FULL, OPTIONS, RESULTS, RIVAL, fig, panel_label, save, title, wrap
 
 # ---- A: restarts on one question -------------------------------------------------------
 by = collections.defaultdict(dict)
@@ -58,7 +58,6 @@ ax = f.add_subplot(gs[:, 0]); hx = f.add_subplot(gs[0, 1]); mx = f.add_subplot(g
 loops = np.arange(1, K + 1)
 onset = next(i for i, v in enumerate(c["base"]["argmax_is_letter"]) if v) + 1      # first loop where a letter is the next token
 ax.axvspan(0.5, onset - 0.5, color="#f1f1f1", zorder=0)
-ax.text(onset - 0.7, 0.985, "letters not yet\nthe next token", fontsize=6.5, ha="right", va="top", color="#777777")
 for j, cond in enumerate(CONDS):
     P = np.array(c[cond]["derived"]["probs"])
     for o in range(4):
@@ -66,9 +65,9 @@ for j, cond in enumerate(CONDS):
                 ls="-" if j == 0 else "--", label=f"option {'ABCD'[o]}" + (" (correct)" if "ABCD"[o] == c["base"]["correct_letter"] else "") if j == 0 else None)
 ax.plot([], [], color="#444444", lw=1.8, label="base run"); ax.plot([], [], color="#444444", lw=1.0, ls="--", alpha=0.6, label="two other initial states")
 ax.set_xlim(1, K); ax.set_ylim(0, 1); ax.set_xlabel("recurrent loop"); ax.set_ylabel("probability among the four options")
-ax.set_title("one question, three random initial states\nan early wobble, then the same letter", loc="left", fontsize=8.5, pad=8)
+title(ax, "one question, three random initial states: an early wobble, then the same letter")
 ax.legend(loc="upper right", fontsize=7)
-ax.text(0.0, -0.13, "all 50 questions: the restarts end on the same letter 96% of the time and share the exact\nset of change-loops 8% of the time; before the shaded edge the four letters carry <5% of the\nnext-token mass, so the swings there are ratios of near-zero numbers",
+ax.text(0.0, -0.13, wrap(ax, "All 50 questions: restarts end on the same letter 96% of the time and share the exact set of change-loops 8% of the time. Shaded: loops before a letter is the next token (the four letters carry <5% of the mass there).", 6.8),
         transform=ax.transAxes, fontsize=6.8, color="#555555", va="top")
 panel_label(ax, "A", x=-0.2, y=1.05)
 
@@ -83,8 +82,7 @@ last = [max([i for i in range(1, K64) if lead[q, i] != lead[q, i - 1]] or [0]) f
 order = np.argsort(last)
 hx.imshow(diff[order], aspect="auto", cmap=ListedColormap([FAINT, RIVAL]), interpolation="nearest", extent=(0.5, K64 + 0.5, len(rows) - 0.5, -0.5))
 hx.set_yticks([]); hx.set_ylabel(f"{len(rows)} questions, sorted by their last change")
-hx.set_title("all 50 questions over 64 loops; red = leader still differs from the final one\nK=16 and K=30 are prefixes of this run, so one last change reads as 0.62, 0.39 or 0.24 'of the way'",
-             loc="left", fontsize=8, pad=8)
+title(hx, "all 50 questions over 64 loops (red: leader ≠ final). K=16 and K=30 are prefixes of this run, so one last change reads as 0.62, 0.39 or 0.24 'of the way'", fontsize=8)
 fr = {16: 0.62, 30: 0.39, 64: 0.24}                             # mean last-change loop / (K-1), RESULT 11
 for k in (16, 30):
     hx.axvline(k + 0.5, color="#222222", lw=0.9, ls=":")

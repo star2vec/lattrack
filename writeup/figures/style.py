@@ -45,9 +45,52 @@ def fig(width=FULL, height=TALL, **kw):
     return plt.figure(figsize=(width, height), **kw)
 
 
+def chars_that_fit(ax, fontsize, frac=1.0):
+    """How many characters of `fontsize` fit across `frac` of the axes width (sans-serif,
+    ~0.55 em average advance)."""
+    f = ax.figure
+    w_in = ax.get_position().width * f.get_figwidth() * frac
+    return max(12, int(w_in * 72 / (fontsize * 0.52)))
+
+
+def wrap(ax, text, fontsize, frac=1.0):
+    """Re-wrap `text` (existing newlines kept as paragraph breaks) to the axes width."""
+    import textwrap
+    n = chars_that_fit(ax, fontsize, frac)
+    return "\n".join(textwrap.fill(part, n) if part else "" for part in text.split("\n"))
+
+
+def title(ax, text, fontsize=8.5, pad=8, frac=1.0):
+    """Left-aligned title wrapped to the axes width so it never hangs past the panel."""
+    ax.set_title(wrap(ax, text, fontsize, frac), loc="left", fontsize=fontsize, pad=pad)
+
+
+def audit(f):
+    """Report text that hangs past the right edge of its axes or of the canvas. Titles and
+    long notes are the usual offenders; with bbox='tight' they do not get clipped, they
+    widen the canvas and leave the figure lopsided."""
+    f.canvas.draw()
+    W = f.get_figwidth() * f.dpi
+    tol = 0.01 * W
+    for ax in f.axes:
+        ax_right = ax.get_window_extent().x1
+        for t in ax.texts + [ax.title, ax.xaxis.label, ax._left_title, ax._right_title]:
+            if not t.get_text().strip():
+                continue
+            bb = t.get_window_extent()
+            if bb.x1 > ax_right + tol or bb.x1 > W + tol:
+                print(f"  OVERFLOW right: {t.get_text()[:50]!r} ends {bb.x1 - ax_right:+.0f}px past its axes"
+                      + (f", {bb.x1 - W:+.0f}px past the canvas" if bb.x1 > W else ""))
+    for lg in f.legends:
+        bb = lg.get_window_extent()
+        if bb.x1 > W + tol:
+            print(f"  OVERFLOW right: figure legend {bb.x1 - W:+.0f}px past the canvas")
+
+
 def save(f, name):
-    """PNG for the post, SVG for editing; both under out/."""
+    """PNG for the post, SVG for editing; both under out/. Prints an overflow audit."""
     OUT.mkdir(exist_ok=True)
+    audit(f)
     f.savefig(OUT / f"{name}.png")
     f.savefig(OUT / f"{name}.svg")
     print(f"wrote {OUT / name}.png / .svg")

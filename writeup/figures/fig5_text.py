@@ -14,7 +14,7 @@ import re
 import textwrap
 
 import numpy as np
-from style import ANSWER, CONTROL, FAINT, FULL, RESULTS, RIVAL, fig, panel_label, save
+from style import ANSWER, CONTROL, FAINT, FULL, RESULTS, RIVAL, fig, panel_label, save, title, wrap
 
 WAIT_QID = "Mercury_7007858"   # rule: every wait window has no 4-way leader change and a lean swing under the
                                # phrasing-noise q95 (9 of the 12 wait traces with a parsed answer qualify; this one
@@ -56,16 +56,15 @@ ax1.plot([x0, x0], [-1.0, -1.0 + noise], color=CONTROL, lw=2)
 ax1.text(x0 - 6, -1.0 + noise / 2, f"phrasing\nnoise (q95)\n{noise:.1f}", color=CONTROL, fontsize=7, ha="right", va="center")
 ax1.set_ylim(-3.5, 10.9); ax1.set_xlim(0, r["T"])
 ax1.set_xlabel("token in the trace"); ax1.set_ylabel("leaning toward the final answer (logits)")
-ax1.set_title(f"a reasoning model says \"wait\" {len(r['waits'])} times\nthe leaning does not move there",
-              loc="left", fontsize=9, pad=8)
+title(ax1, "a reasoning model says \"wait\" twice: the leaning does not move there", fontsize=9)
 ax1.legend(loc="lower right", fontsize=7)
 panel_label(ax1, "A", x=-0.22, y=1.08)
 
 m = re.search(r"(?i)\bwait\b[^.]*\.[^.]*\.", r["trace"])
 lo = r["trace"].rfind(". ", 0, m.start()) + 2
 excerpt = r["trace"][lo:m.end()].replace("\n", " ")
-tx1.text(0.0, 0.95, f"at the first dashed line (it ends on {r['parsed']}, correct {r['correct']}):", fontsize=7.5, color="#555555", va="top")
-tx1.text(0.0, 0.74, textwrap.fill("“…" + excerpt + "”", 60), fontsize=7.5, va="top", style="italic")
+tx1.text(0.0, 0.98, f"at the first \"wait\" (it ends on {r['parsed']}, correct {r['correct']}):", fontsize=7.2, color="#555555", va="top")
+tx1.text(0.0, 0.76, wrap(tx1, "“…" + excerpt + "”", 7.5), fontsize=7.5, va="top", style="italic")
 
 # ---- right: a documented reversal in a downloaded trace ------------------------
 v = [json.loads(l) for l in open(RESULTS / "validation" / "validation_stated.jsonl")]
@@ -81,12 +80,11 @@ ax2.text(820, -1.45, f"earlier answer ({q['from']}) preferred", fontsize=7, colo
 ax2.text(pos[-1], 3.0, f"later answer ({q['to']}) preferred", fontsize=7, color=ANSWER, ha="right", va="bottom")
 ax2.set_ylim(-6.8, 4.6); ax2.set_xlim(0, q["T"] + 40)
 ax2.set_xlabel("token in the trace"); ax2.set_ylabel("log P(later answer) − log P(earlier answer)")
-ax2.set_title("a downloaded trace with a written change of answer\nthe leaning crosses at the switch",
-              loc="left", fontsize=9, pad=8)
+title(ax2, "a downloaded trace with a written change of answer: the leaning crosses at the switch", fontsize=9)
 ax2.legend(loc="lower right", fontsize=7)
 panel_label(ax2, "B", x=-0.22, y=1.08)
-tx2.text(0.0, 0.95, textwrap.fill(f"reading stops at {q['T']:,} tokens; the trace continues to its final answer {q['to']}, "
+tx2.text(0.0, 0.95, wrap(tx2, f"reading stops at {q['T']:,} tokens; the trace continues to its final answer {q['to']}, "
          "the documented one. Grey: two other numbers from the same trace, read the same way "
-         "(one early read is off-scale).", 62), fontsize=7.5, color="#555555", va="top")
+         "(one early read is off-scale).", 7.5, frac=0.95), fontsize=7.5, color="#555555", va="top")
 save(f, "fig5_text")
 print("wait excerpt:", excerpt[:200])
